@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  SubnetSchema,
-  VirtualNetworkSchema,
-} from '@osac/types';
+import { SubnetSchema, VirtualNetworkSchema } from '@osac/types';
 
 import { decodeFulfillmentResponse } from '../fulfillment-decode';
 
