@@ -154,6 +154,7 @@
   "This permanently deletes the cluster and all its resources. This action cannot be undone.": "This permanently deletes the cluster and all its resources. This action cannot be undone.",
   "UDP": "UDP",
   "Unauthorized": "Unauthorized",
+  "Unknown": "Unknown",
   "Users": "Users",
   "Virtual machines": "Virtual machines",
   "Virtual Machines": "Virtual Machines",
