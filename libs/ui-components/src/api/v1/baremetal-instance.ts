@@ -2,12 +2,18 @@ import { type MessageInitShape } from '@bufbuild/protobuf';
 import { useMutation } from '@tanstack/react-query';
 
 import {
+  BareMetalInstanceCatalogItemSchema,
   BareMetalInstanceCatalogItems,
   BareMetalInstanceRunStrategy,
   BareMetalInstanceSchema,
   BareMetalInstances,
 } from '@osac/types';
+import {
+  BareMetalInstanceCatalogItemSchema as PrivateBareMetalInstanceCatalogItemSchema,
+  BareMetalInstanceCatalogItems as PrivateBareMetalInstanceCatalogItems,
+} from '@osac/types/private';
 
+import { useSession } from '../../hooks/use-session';
 import { useApiFetch } from '../api-context';
 import { type ListParams, apiQueryKey } from '../types';
 import { type ApiQueryClient, useApiQuery, useApiQueryClient } from '../use-api-query';
@@ -44,6 +50,25 @@ export const useBareMetalInstanceCatalogItems = (params: ListParams = {}, enable
 
 export const invalidateBareMetalInstancesQueries = async (qc: ApiQueryClient) => {
   await qc.invalidateQueries({ queryKey: apiQueryKey('v1/baremetal_instances') });
+};
+
+export const useCreateBareMetalInstanceCatalogItem = () => {
+  const { role } = useSession();
+  const isProviderAdmin = role === 'providerAdmin';
+  const publicClient = useApiFetch(BareMetalInstanceCatalogItems);
+  const privateClient = useApiFetch(PrivateBareMetalInstanceCatalogItems);
+  const qc = useApiQueryClient();
+  return useMutation({
+    mutationFn: (item: MessageInitShape<typeof BareMetalInstanceCatalogItemSchema>) =>
+      (isProviderAdmin
+        ? privateClient.create({
+            object: item as MessageInitShape<typeof PrivateBareMetalInstanceCatalogItemSchema>,
+          })
+        : publicClient.create({ object: item })
+      ).then((response) => response.object),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: apiQueryKey('v1/baremetal_instance_catalog_items') }),
+  });
 };
 
 export type BareMetalPowerAction = 'start' | 'stop' | 'restart';
