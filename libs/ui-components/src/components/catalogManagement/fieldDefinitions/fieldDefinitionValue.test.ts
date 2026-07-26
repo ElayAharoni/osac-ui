@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildFieldDefinition } from './fieldDefinitionValue';
+import { buildFieldDefinition, fieldDefinitionValueSchema } from './fieldDefinitionValue';
+import { tIdentity } from '../../../test-utils/i18n';
 
 describe('buildFieldDefinition', () => {
   it('builds a field definition from a string default with no validation', () => {
@@ -52,5 +53,29 @@ describe('buildFieldDefinition', () => {
     });
 
     expect(result.validationSchema).toBe('');
+  });
+});
+
+describe('fieldDefinitionValueSchema', () => {
+  const schema = fieldDefinitionValueSchema(tIdentity);
+
+  it('requires a default value when editable is false', async () => {
+    await expect(schema.validate({ editable: false, default: '' })).rejects.toThrow(
+      'Default value is required for non-editable fields',
+    );
+  });
+
+  it('allows an empty default value when editable is true', async () => {
+    await expect(schema.validate({ editable: true, default: '' })).resolves.toEqual({
+      editable: true,
+      default: '',
+    });
+  });
+
+  it('passes when a non-editable field has a default value', async () => {
+    await expect(schema.validate({ editable: false, default: 'value' })).resolves.toEqual({
+      editable: false,
+      default: 'value',
+    });
   });
 });
