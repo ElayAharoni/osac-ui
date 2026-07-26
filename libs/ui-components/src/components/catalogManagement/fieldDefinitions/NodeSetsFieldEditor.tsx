@@ -20,10 +20,18 @@ import { SwitchField } from '../../Form/SwitchField';
 
 const NODE_SETS_NAME = 'fieldDefinitions.node_sets';
 
-interface NodeSetEntry {
+export interface NodeSetEntry {
   rowId: string;
   hostType: { value: string; label: string };
   size: string;
+}
+
+export interface NodeSetsFieldValue {
+  entries: NodeSetEntry[];
+  editable: boolean;
+  allowAddRemove: boolean;
+  sizeMin?: string;
+  sizeMax?: string;
 }
 
 interface NodeSetsFormValues {
