@@ -127,3 +127,35 @@ const parseProtobufValueToPlain = (value: unknown): unknown => {
 };
 
 export const protobufValueToPlain = (value: unknown): unknown => parseProtobufValueToPlain(value);
+
+/**
+ * Converts a plain JS scalar, array, or object into a decoded `google.protobuf.Value` init shape
+ * (the `{ kind: { case, value } }` oneof shape `@bufbuild/protobuf` accepts for message construction),
+ * for catalog field defaults at write time. Inverse of `protobufValueToPlain`.
+ */
+export const plainToProtobufValue = (value: unknown): unknown => {
+  if (value === undefined || value === null) {
+    // google.protobuf.NullValue.NULL_VALUE is the sole (proto3) enum value, numeric 0.
+    return { kind: { case: 'nullValue', value: 0 } };
+  }
+  if (typeof value === 'string') {
+    return { kind: { case: 'stringValue', value } };
+  }
+  if (typeof value === 'number') {
+    return { kind: { case: 'numberValue', value } };
+  }
+  if (typeof value === 'boolean') {
+    return { kind: { case: 'boolValue', value } };
+  }
+  if (Array.isArray(value)) {
+    return { kind: { case: 'listValue', value: { values: value.map(plainToProtobufValue) } } };
+  }
+  if (typeof value === 'object') {
+    const fields: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+      fields[key] = plainToProtobufValue(entry);
+    }
+    return { kind: { case: 'structValue', value: { fields } } };
+  }
+  return { kind: { case: 'nullValue', value: 0 } };
+};
