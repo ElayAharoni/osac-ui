@@ -28,7 +28,7 @@ const mockLists = () => {
 };
 
 interface Values {
-  metadata: { name: string };
+  title: string;
   description: string;
   template: { value: string; label: string };
   scope: {
@@ -39,7 +39,7 @@ interface Values {
 }
 
 const initialValues: Values = {
-  metadata: { name: '' },
+  title: '',
   description: '',
   template: { value: '', label: '' },
   scope: {

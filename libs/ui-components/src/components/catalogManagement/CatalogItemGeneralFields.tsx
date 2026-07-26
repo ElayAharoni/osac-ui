@@ -4,7 +4,6 @@ import { useOrganizations } from '../../api/v1/organization';
 import { useProjects } from '../../api/v1/projects';
 import { useSession } from '../../hooks/use-session';
 import { useTranslation } from '../../hooks/useTranslation';
-import NameField from '../catalogProvision/wizard/fields/NameField';
 import { InputField } from '../Form/InputField';
 import { RadioButtonField } from '../Form/RadioButtonField';
 import { SelectField, type SelectFieldOption } from '../Form/SelectField';
@@ -37,7 +36,7 @@ export const CatalogItemGeneralFields = ({
 
   return (
     <>
-      <NameField />
+      <InputField name="title" label={t('Name')} fieldId="catalog-item-title" isRequired />
       <InputField
         name="description"
         label={t('Description')}
