@@ -23,11 +23,16 @@ export type ApiRoute =
   | 'v1/security_groups'
   | 'v1/baremetal_instance_catalog_items'
   | 'v1/baremetal_instances'
+  | 'v1/baremetal_instance_templates'
   | 'v1/public_ips'
   | 'v1/public_ip_attachments'
   | 'v1/private/compute_instance_catalog_items'
   | 'v1/private/cluster_catalog_items'
   | 'v1/private/baremetal_instance_catalog_items'
+  | 'v1/cluster_templates_private'
+  | 'v1/compute_instance_templates_private'
+  | 'v1/baremetal_instance_templates_private'
+  | 'v1/projects'
   | 'v1/console_sessions';
 
 /**
