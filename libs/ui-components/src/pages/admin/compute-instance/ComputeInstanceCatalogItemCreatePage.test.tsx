@@ -21,9 +21,15 @@ const asQueryResult = <T,>(data: T) =>
     typeof organizationApi.useOrganizations
   >;
 
-const mockSharedData = () => {
+const mockSharedData = (
+  instanceTypes: {
+    id: string;
+    metadata?: { name?: string };
+    spec?: Record<string, unknown>;
+  }[] = [],
+) => {
   vi.mocked(instanceTypesApi.useInstanceTypes).mockReturnValue(
-    asQueryResult([]) as unknown as ReturnType<typeof instanceTypesApi.useInstanceTypes>,
+    asQueryResult(instanceTypes) as unknown as ReturnType<typeof instanceTypesApi.useInstanceTypes>,
   );
   vi.mocked(organizationApi.useOrganizations).mockReturnValue(asQueryResult([]));
   vi.mocked(projectsApi.useProjects).mockReturnValue(
@@ -82,5 +88,27 @@ describe('ComputeInstanceCatalogItemCreatePage', () => {
     expect(request.object.published).toBe(false);
     expect(request.object.title).toBe('My VM');
     expect(request.object.fieldDefinitions.map((fd) => fd.path)).toContain('network_attachments');
+  });
+
+  it('flattens the selected instance type to its id, not the whole {value, label} ref, when serializing the default', async () => {
+    mockSharedData([
+      { id: 'small', metadata: { name: 'Small' }, spec: { cores: 2, memoryGib: 4 } },
+    ]);
+    createFn.mockClear();
+    const { user } = renderPage();
+
+    await user.type(screen.getByLabelText(/^Name/), 'My VM');
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Default value' }));
+    await user.click(screen.getByRole('option', { name: /Small/ }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+
+    await waitFor(() => expect(createFn).toHaveBeenCalled());
+    const request = (createFn.mock.calls[0] as unknown[])[0] as {
+      object: { fieldDefinitions: { path: string; default: unknown }[] };
+    };
+    const instanceType = request.object.fieldDefinitions.find((fd) => fd.path === 'instance_type');
+    expect(instanceType?.default).toMatchObject({ kind: { case: 'stringValue', value: 'small' } });
   });
 });

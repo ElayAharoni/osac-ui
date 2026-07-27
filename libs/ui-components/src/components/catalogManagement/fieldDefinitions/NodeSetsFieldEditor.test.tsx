@@ -113,7 +113,7 @@ describe('NodeSetsFieldEditor', () => {
       },
     });
 
-    await user.click(screen.getByRole('button', { name: 'Remove node set' }));
+    await user.click(screen.getByRole('button', { name: 'Remove node set 2' }));
 
     expect(screen.getByLabelText('entry-count')).toHaveTextContent('1');
   });
@@ -126,7 +126,40 @@ describe('NodeSetsFieldEditor', () => {
       },
     });
 
-    expect(screen.queryByRole('button', { name: 'Remove node set' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Remove node set/ })).not.toBeInTheDocument();
+  });
+
+  it('gives each remove button in a multi-row list a distinct accessible name', () => {
+    mockHostTypes();
+    renderEditor({
+      fieldDefinitions: {
+        node_sets: {
+          entries: [emptyEntry('row-1'), emptyEntry('row-2'), emptyEntry('row-3')],
+          editable: true,
+          allowAddRemove: true,
+        },
+      },
+    });
+
+    expect(screen.getByRole('button', { name: 'Remove node set 2' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove node set 3' })).toBeInTheDocument();
+  });
+
+  it('shows an error and disables adding rows when host types fail to load', () => {
+    vi.mocked(hostTypesApi.useHostTypes).mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: new Error('network down'),
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof hostTypesApi.useHostTypes>);
+    renderEditor({
+      fieldDefinitions: {
+        node_sets: { entries: [emptyEntry('row-1')], editable: true, allowAddRemove: true },
+      },
+    });
+
+    expect(screen.getByText('Could not load host types')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add node set' })).toBeDisabled();
   });
 
   it('disables an already-selected host type in other rows', async () => {

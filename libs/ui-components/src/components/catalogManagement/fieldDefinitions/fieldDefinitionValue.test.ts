@@ -79,3 +79,30 @@ describe('fieldDefinitionValueSchema', () => {
     });
   });
 });
+
+describe('fieldDefinitionValueSchema with a format test', () => {
+  const schema = fieldDefinitionValueSchema(tIdentity, {
+    name: 'even-length',
+    message: 'Value must have an even length',
+    test: (value) => typeof value !== 'string' || value.length % 2 === 0,
+  });
+
+  it('applies the format test to a provided default', async () => {
+    await expect(schema.validate({ editable: true, default: 'odd' })).rejects.toThrow(
+      'Value must have an even length',
+    );
+  });
+
+  it('passes the format test for a valid default', async () => {
+    await expect(schema.validate({ editable: true, default: 'even' })).resolves.toEqual({
+      editable: true,
+      default: 'even',
+    });
+  });
+
+  it('still enforces the required-when-non-editable rule alongside the format test', async () => {
+    await expect(schema.validate({ editable: false, default: '' })).rejects.toThrow(
+      'Default value is required for non-editable fields',
+    );
+  });
+});

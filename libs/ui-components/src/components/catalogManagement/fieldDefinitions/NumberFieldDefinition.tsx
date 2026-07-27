@@ -1,8 +1,6 @@
-import { FormFieldGroup, FormFieldGroupHeader } from '@patternfly/react-core';
-
+import { FieldDefinitionGroup } from './FieldDefinitionGroup';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { InputField } from '../../Form/InputField';
-import { SwitchField } from '../../Form/SwitchField';
 
 interface NumberFieldDefinitionProps {
   path: string;
@@ -15,14 +13,7 @@ export const NumberFieldDefinition = ({ path, label, fieldId }: NumberFieldDefin
   const name = `fieldDefinitions.${path}`;
 
   return (
-    <FormFieldGroup
-      header={<FormFieldGroupHeader titleText={{ text: label, id: `${fieldId}-group` }} />}
-    >
-      <SwitchField
-        name={`${name}.editable`}
-        label={t('Editable')}
-        fieldId={`${fieldId}-editable`}
-      />
+    <FieldDefinitionGroup label={label} fieldId={fieldId} name={name}>
       <InputField
         name={`${name}.default`}
         label={t('Default value')}
@@ -41,6 +32,6 @@ export const NumberFieldDefinition = ({ path, label, fieldId }: NumberFieldDefin
         fieldId={`${fieldId}-max`}
         type="number"
       />
-    </FormFieldGroup>
+    </FieldDefinitionGroup>
   );
 };

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import {
   ActionGroup,
+  Alert,
   Button,
   FormFieldGroup,
   FormFieldGroupHeader,
@@ -13,6 +14,7 @@ import { useFormikContext } from 'formik';
 
 import { hostTypeDisplayName, useHostTypes } from '../../../api/v1/host-types';
 import { useTranslation } from '../../../hooks/useTranslation';
+import { getErrorMessage } from '../../../utils/error';
 import { InputField } from '../../Form/InputField';
 import { EMPTY_LABELED_RESOURCE_REF } from '../../Form/labeledResourceRef';
 import { SelectField } from '../../Form/SelectField';
@@ -36,9 +38,7 @@ export interface NodeSetsFieldValue {
 
 interface NodeSetsFormValues {
   fieldDefinitions: {
-    node_sets: {
-      entries: NodeSetEntry[];
-    };
+    node_sets: NodeSetsFieldValue;
   };
 }
 
@@ -51,7 +51,11 @@ const createEmptyEntry = (rowId: string): NodeSetEntry => ({
 export const NodeSetsFieldEditor = () => {
   const { t } = useTranslation();
   const { values, setFieldValue } = useFormikContext<NodeSetsFormValues>();
-  const { data: hostTypes = [], isLoading: hostTypesLoading } = useHostTypes();
+  const {
+    data: hostTypes = [],
+    isLoading: hostTypesLoading,
+    error: hostTypesError,
+  } = useHostTypes();
   const entries = values.fieldDefinitions.node_sets.entries;
 
   const selectedHostTypeIds = useMemo(
@@ -84,6 +88,13 @@ export const NodeSetsFieldEditor = () => {
 
   return (
     <Stack hasGutter>
+      {hostTypesError ? (
+        <StackItem>
+          <Alert variant="danger" isInline title={t('Could not load host types')}>
+            {getErrorMessage(hostTypesError)}
+          </Alert>
+        </StackItem>
+      ) : null}
       <StackItem>
         <SwitchField
           name={`${NODE_SETS_NAME}.editable`}
@@ -123,7 +134,7 @@ export const NodeSetsFieldEditor = () => {
                   rowIndex > 0 ? (
                     <Button
                       variant="plain"
-                      aria-label={t('Remove node set')}
+                      aria-label={t('Remove node set {{number}}', { number: rowIndex + 1 })}
                       onClick={() => removeRow(rowIndex)}
                       icon={<MinusCircleIcon />}
                     />
@@ -155,7 +166,7 @@ export const NodeSetsFieldEditor = () => {
             variant="link"
             icon={<PlusCircleIcon />}
             onClick={addRow}
-            isDisabled={hostTypesLoading}
+            isDisabled={hostTypesLoading || Boolean(hostTypesError)}
           >
             {t('Add node set')}
           </Button>

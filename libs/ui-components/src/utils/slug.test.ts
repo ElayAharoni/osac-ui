@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { slugify } from './slug';
+import { slugify, slugifyUnique } from './slug';
 
 describe('slugify', () => {
   it('lowercases and replaces spaces with hyphens', () => {
@@ -30,5 +30,29 @@ describe('slugify', () => {
 
   it('falls back to a default when the input has no valid characters', () => {
     expect(slugify('!!!')).toBe('item');
+  });
+
+  it('strips diacritics instead of dropping the underlying letter', () => {
+    expect(slugify('Café Münster')).toBe('cafe-munster');
+  });
+
+  it('falls back to a default for titles with no Latin-derived characters', () => {
+    expect(slugify('Кластер')).toBe('item');
+  });
+});
+
+describe('slugifyUnique', () => {
+  it('appends a short random suffix to the slug', () => {
+    const result = slugifyUnique('My Cluster');
+    expect(result).toMatch(/^my-cluster-[0-9a-f]{6}$/);
+  });
+
+  it('produces different names for the same title on repeated calls', () => {
+    expect(slugifyUnique('My VM')).not.toBe(slugifyUnique('My VM'));
+  });
+
+  it('stays within 63 characters for long titles', () => {
+    const longName = 'a'.repeat(100);
+    expect(slugifyUnique(longName).length).toBeLessThanOrEqual(63);
   });
 });

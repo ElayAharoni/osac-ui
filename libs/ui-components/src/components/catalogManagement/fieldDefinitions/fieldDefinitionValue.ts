@@ -32,17 +32,37 @@ export const buildFieldDefinition = <TDefault>(
   validationSchema: value.validation ? JSON.stringify(value.validation) : '',
 });
 
-/** Shared validation for a field definition value: a default is required when the field is non-editable. */
-export const fieldDefinitionValueSchema = (t: TFunction) =>
-  Yup.object({
-    editable: Yup.boolean().required(),
-    default: Yup.mixed().when('editable', {
-      is: false,
-      then: (schema) =>
-        schema.test(
-          'required-default',
-          t('Default value is required for non-editable fields'),
-          (value) => value !== undefined && value !== null && value !== '',
-        ),
-    }),
+export interface FieldDefinitionFormatTest {
+  name: string;
+  message: string;
+  test: (value: unknown) => boolean;
+}
+
+/**
+ * Shared validation for a field definition value: a default is required when the field is
+ * non-editable. `formatTest` layers an additional constraint on the default value itself (e.g.
+ * CIDR notation), applied whenever a value is present regardless of `editable`.
+ */
+export const fieldDefinitionValueSchema = (
+  t: TFunction,
+  formatTest?: FieldDefinitionFormatTest,
+) => {
+  let defaultSchema = Yup.mixed().when('editable', {
+    is: false,
+    then: (schema) =>
+      schema.test(
+        'required-default',
+        t('Default value is required for non-editable fields'),
+        (value) => value !== undefined && value !== null && value !== '',
+      ),
   });
+  if (formatTest) {
+    defaultSchema = defaultSchema.test(formatTest.name, formatTest.message, (value) =>
+      value === undefined || value === null || value === '' ? true : formatTest.test(value),
+    );
+  }
+  return Yup.object({
+    editable: Yup.boolean().required(),
+    default: defaultSchema,
+  });
+};

@@ -1,12 +1,12 @@
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { type MessageInitShape } from '@bufbuild/protobuf';
 import {
   Alert,
   Breadcrumb,
   BreadcrumbItem,
   Button,
   Content,
-  Flex,
   PageSection,
   PageSectionTypes,
   Stack,
@@ -15,15 +15,22 @@ import {
   Wizard,
   WizardFooterWrapper,
   WizardStep,
-  useWizardContext,
 } from '@patternfly/react-core';
-import { type FormikProps, FormikProvider, useFormik } from 'formik';
+import { FormikProvider, useFormik } from 'formik';
 import type { TFunction } from 'i18next';
 import * as Yup from 'yup';
+
+import { ClusterCatalogItemSchema } from '@osac/types';
 
 import { useCreateClusterCatalogItem } from '../../../api/v1/cluster-catalog-item';
 import { useAdminClusterTemplates } from '../../../api/v1/cluster-templates';
 import { CatalogItemGeneralFields } from '../../../components/catalogManagement/CatalogItemGeneralFields';
+import {
+  type ScopeValues,
+  buildScopePayloadFields,
+  initialScopeForRole,
+} from '../../../components/catalogManagement/catalogItemScope';
+import { CatalogItemWizardFooter } from '../../../components/catalogManagement/CatalogItemWizardFooter';
 import {
   type FieldDefinitionValue,
   buildFieldDefinition,
@@ -41,7 +48,7 @@ import {
 import { useSession } from '../../../hooks/use-session';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { getErrorMessage } from '../../../utils/error';
-import { slugify } from '../../../utils/slug';
+import { isValidCidr } from '../../../validation/cidr-validation';
 
 const STEP_IDS = ['general', 'configuration', 'networking', 'access'] as const;
 type ClusterStepId = (typeof STEP_IDS)[number];
@@ -52,15 +59,6 @@ const STEP_LABEL_KEYS: Record<ClusterStepId, string> = {
   networking: 'Networking',
   access: 'Access',
 };
-
-const isStepId = (id: string | number | undefined): id is ClusterStepId =>
-  typeof id === 'string' && (STEP_IDS as readonly string[]).includes(id);
-
-interface ScopeValues {
-  level: string;
-  tenant: LabeledResourceRef;
-  project: LabeledResourceRef;
-}
 
 interface ClusterCatalogItemFormValues {
   title: string;
@@ -79,19 +77,20 @@ interface ClusterCatalogItemFormValues {
   };
 }
 
-const CIDR_PATTERN = '^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$';
+// Octet-range-aware (0-255) and prefix-range-aware (0-32) IPv4 CIDR pattern for the wire
+// validationSchema — a loose digit-count-only pattern would accept "999.999.999.999/99".
+const CIDR_PATTERN =
+  '^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}/([0-9]|[12][0-9]|3[0-2])$';
 const SSH_PUBLIC_KEY_PATTERN =
   '^(ssh-rsa|ecdsa-sha2-nistp(256|384|521)|ssh-ed25519) AAAA[0-9A-Za-z+/]+[=]{0,3}( .*)?$';
 
-const initialValues: ClusterCatalogItemFormValues = {
+const createInitialValues = (
+  role: ReturnType<typeof useSession>['role'],
+): ClusterCatalogItemFormValues => ({
   title: '',
   description: '',
   template: EMPTY_LABELED_RESOURCE_REF,
-  scope: {
-    level: 'general',
-    tenant: EMPTY_LABELED_RESOURCE_REF,
-    project: EMPTY_LABELED_RESOURCE_REF,
-  },
+  scope: initialScopeForRole(role),
   fieldDefinitions: {
     release_image: { editable: true, default: '' },
     node_sets: {
@@ -110,7 +109,47 @@ const initialValues: ClusterCatalogItemFormValues = {
     },
     pull_secret: { editable: true, default: '' },
   },
-};
+});
+
+const cidrFormatTest = (t: TFunction) => ({
+  name: 'valid-cidr',
+  message: t('Must be a valid IPv4 CIDR notation (for example 10.128.0.0/14)'),
+  test: (value: unknown) => typeof value === 'string' && isValidCidr(value, 'ipv4'),
+});
+
+const nodeSetEntrySchema = (t: TFunction) =>
+  Yup.object({
+    hostType: Yup.object({ value: Yup.string().required() }).test(
+      'host-type-selected',
+      t('Host type is required'),
+      (hostType) => Boolean(hostType?.value?.trim()),
+    ),
+    size: Yup.string().test(
+      'positive-size',
+      t('Size must be a positive number'),
+      (value) => Number.isFinite(Number(value)) && Number(value) > 0,
+    ),
+  });
+
+const nodeSetsSchema = (t: TFunction) =>
+  Yup.object({
+    entries: Yup.array()
+      .of(nodeSetEntrySchema(t))
+      .min(1, t('At least one node set is required'))
+      .test(
+        'no-duplicate-host-types',
+        t('Each node set must use a different host type'),
+        (entries) => {
+          if (!entries) {
+            return true;
+          }
+          const hostTypeIds = entries
+            .map((entry) => entry?.hostType?.value?.trim())
+            .filter((value): value is string => Boolean(value));
+          return new Set(hostTypeIds).size === hostTypeIds.length;
+        },
+      ),
+  });
 
 const getStepValidationSchema = (stepId: ClusterStepId, t: TFunction) => {
   switch (stepId) {
@@ -120,14 +159,17 @@ const getStepValidationSchema = (stepId: ClusterStepId, t: TFunction) => {
       });
     case 'configuration':
       return Yup.object({
-        fieldDefinitions: Yup.object({ release_image: fieldDefinitionValueSchema(t) }),
+        fieldDefinitions: Yup.object({
+          release_image: fieldDefinitionValueSchema(t),
+          node_sets: nodeSetsSchema(t),
+        }),
       });
     case 'networking':
       return Yup.object({
         fieldDefinitions: Yup.object({
           network: Yup.object({
-            pod_cidr: fieldDefinitionValueSchema(t),
-            service_cidr: fieldDefinitionValueSchema(t),
+            pod_cidr: fieldDefinitionValueSchema(t, cidrFormatTest(t)),
+            service_cidr: fieldDefinitionValueSchema(t, cidrFormatTest(t)),
           }),
         }),
       });
@@ -140,6 +182,24 @@ const getStepValidationSchema = (stepId: ClusterStepId, t: TFunction) => {
       });
   }
 };
+
+// Validated once, in full, before the final submit — the active step's own schema (above) only
+// covers its own fields, which would let a field cleared on an earlier, already-visited step
+// through undetected (see CatalogItemWizardFooter).
+const getFullFormValidationSchema = (t: TFunction) =>
+  Yup.object({
+    title: Yup.string().required(t('Name is required')),
+    fieldDefinitions: Yup.object({
+      release_image: fieldDefinitionValueSchema(t),
+      node_sets: nodeSetsSchema(t),
+      network: Yup.object({
+        pod_cidr: fieldDefinitionValueSchema(t, cidrFormatTest(t)),
+        service_cidr: fieldDefinitionValueSchema(t, cidrFormatTest(t)),
+      }),
+      ssh_public_key: fieldDefinitionValueSchema(t),
+      pull_secret: fieldDefinitionValueSchema(t),
+    }),
+  });
 
 const parseOptionalNumber = (value: string | undefined): number | undefined => {
   const trimmed = value?.trim();
@@ -206,82 +266,6 @@ const buildFieldDefinitions = (values: ClusterCatalogItemFormValues, t: TFunctio
   }),
 ];
 
-interface FooterProps {
-  formik: FormikProps<ClusterCatalogItemFormValues>;
-  setActiveStepId: (stepId: ClusterStepId) => void;
-  setValidationAlert: (visible: boolean) => void;
-  isPending: boolean;
-}
-
-const ClusterCatalogItemWizardFooter = ({
-  formik,
-  setActiveStepId,
-  setValidationAlert,
-  isPending,
-}: FooterProps) => {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { activeStep, goToStepByIndex } = useWizardContext();
-  const activeStepId = isStepId(activeStep?.id) ? activeStep.id : 'general';
-
-  useLayoutEffect(() => {
-    setActiveStepId(activeStepId);
-  }, [activeStepId, setActiveStepId]);
-
-  const stepIndex = activeStep?.index ?? 1;
-  const isFirst = stepIndex <= 1;
-  const isLast = activeStepId === 'access';
-
-  const handleBack = () => {
-    if (isFirst || isPending) {
-      return;
-    }
-    setValidationAlert(false);
-    goToStepByIndex(stepIndex - 1);
-  };
-
-  const handleNextOrSubmit = () => {
-    if (isPending) {
-      return;
-    }
-    void formik.validateForm().then((errors) => {
-      if (Object.keys(errors).length > 0) {
-        setValidationAlert(true);
-        return;
-      }
-      setValidationAlert(false);
-      if (isLast) {
-        void formik.submitForm();
-      } else {
-        goToStepByIndex(stepIndex + 1);
-      }
-    });
-  };
-
-  return (
-    <Flex
-      justifyContent={{ default: 'justifyContentFlexStart' }}
-      alignItems={{ default: 'alignItemsCenter' }}
-      gap={{ default: 'gapMd' }}
-    >
-      <Button variant="secondary" onClick={handleBack} isDisabled={isFirst || isPending}>
-        {t('Back')}
-      </Button>
-      <Button
-        variant="primary"
-        onClick={handleNextOrSubmit}
-        isDisabled={isPending}
-        isLoading={isPending && isLast}
-      >
-        {isLast ? t('Create') : t('Next')}
-      </Button>
-      <Button variant="link" onClick={() => navigate('/admin/catalog')} isDisabled={isPending}>
-        {t('Cancel')}
-      </Button>
-    </Flex>
-  );
-};
-
 export const ClusterCatalogItemCreatePage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -292,10 +276,12 @@ export const ClusterCatalogItemCreatePage = () => {
   const [validationAlert, setValidationAlert] = useState(false);
   const [submitError, setSubmitError] = useState<string>();
 
+  const initialValues = useMemo(() => createInitialValues(role), [role]);
   const validationSchema = useMemo(
     () => getStepValidationSchema(activeStepId, t),
     [activeStepId, t],
   );
+  const fullFormSchema = useMemo(() => getFullFormValidationSchema(t), [t]);
 
   const formik = useFormik<ClusterCatalogItemFormValues>({
     initialValues,
@@ -305,24 +291,20 @@ export const ClusterCatalogItemCreatePage = () => {
     onSubmit: async (values) => {
       setSubmitError(undefined);
       try {
-        await createClusterCatalogItem({
+        const payload: MessageInitShape<typeof ClusterCatalogItemSchema> = {
           title: values.title.trim(),
           description: values.description.trim(),
           template: values.template.value,
           published: false,
-          ...(role === 'providerAdmin'
-            ? {
-                tenant: values.scope.level === 'organization' ? values.scope.tenant.value : '',
-                metadata: { name: slugify(values.title) },
-              }
-            : {
-                metadata: {
-                  name: slugify(values.title),
-                  project: values.scope.level === 'project' ? values.scope.project.value : '',
-                },
-              }),
-          fieldDefinitions: buildFieldDefinitions(values, t),
-        } as Parameters<typeof createClusterCatalogItem>[0]);
+          ...buildScopePayloadFields(values.scope, role, values.title),
+          // buildFieldDefinition()'s `default` is a decoded google.protobuf.Value init shape;
+          // MessageInitShape can't structurally verify it against the generated Value type, so
+          // this one property needs a cast (see buildFieldDefinition in fieldDefinitionValue.ts).
+          fieldDefinitions: buildFieldDefinitions(values, t) as MessageInitShape<
+            typeof ClusterCatalogItemSchema
+          >['fieldDefinitions'],
+        };
+        await createClusterCatalogItem(payload);
         navigate('/admin/catalog');
       } catch (error) {
         setSubmitError(getErrorMessage(error));
@@ -362,9 +344,11 @@ export const ClusterCatalogItemCreatePage = () => {
             isVisitRequired
             footer={
               <WizardFooterWrapper>
-                <ClusterCatalogItemWizardFooter
+                <CatalogItemWizardFooter
                   formik={formik}
-                  setActiveStepId={setActiveStepId}
+                  stepIds={STEP_IDS}
+                  onActiveStepIdChange={(id) => setActiveStepId(id as ClusterStepId)}
+                  fullFormSchema={fullFormSchema}
                   setValidationAlert={setValidationAlert}
                   isPending={isPending}
                 />

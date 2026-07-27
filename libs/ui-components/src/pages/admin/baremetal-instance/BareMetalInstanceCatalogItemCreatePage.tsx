@@ -1,12 +1,12 @@
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { type MessageInitShape } from '@bufbuild/protobuf';
 import {
   Alert,
   Breadcrumb,
   BreadcrumbItem,
   Button,
   Content,
-  Flex,
   PageSection,
   PageSectionTypes,
   Stack,
@@ -15,15 +15,22 @@ import {
   Wizard,
   WizardFooterWrapper,
   WizardStep,
-  useWizardContext,
 } from '@patternfly/react-core';
-import { type FormikProps, FormikProvider, useFormik } from 'formik';
+import { FormikProvider, useFormik } from 'formik';
 import type { TFunction } from 'i18next';
 import * as Yup from 'yup';
+
+import { BareMetalInstanceCatalogItemSchema } from '@osac/types';
 
 import { useCreateBareMetalInstanceCatalogItem } from '../../../api/v1/baremetal-instance';
 import { useAdminBareMetalInstanceTemplates } from '../../../api/v1/baremetal-instance-templates';
 import { CatalogItemGeneralFields } from '../../../components/catalogManagement/CatalogItemGeneralFields';
+import {
+  type ScopeValues,
+  buildScopePayloadFields,
+  initialScopeForRole,
+} from '../../../components/catalogManagement/catalogItemScope';
+import { CatalogItemWizardFooter } from '../../../components/catalogManagement/CatalogItemWizardFooter';
 import {
   type FieldDefinitionValue,
   buildFieldDefinition,
@@ -39,7 +46,6 @@ import {
 import { useSession } from '../../../hooks/use-session';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { getErrorMessage } from '../../../utils/error';
-import { slugify } from '../../../utils/slug';
 
 const STEP_IDS = ['general', 'configuration', 'access'] as const;
 type BareMetalStepId = (typeof STEP_IDS)[number];
@@ -49,15 +55,6 @@ const STEP_LABEL_KEYS: Record<BareMetalStepId, string> = {
   configuration: 'Configuration',
   access: 'Access',
 };
-
-const isStepId = (id: string | number | undefined): id is BareMetalStepId =>
-  typeof id === 'string' && (STEP_IDS as readonly string[]).includes(id);
-
-interface ScopeValues {
-  level: string;
-  tenant: LabeledResourceRef;
-  project: LabeledResourceRef;
-}
 
 interface BareMetalInstanceCatalogItemFormValues {
   title: string;
@@ -71,21 +68,19 @@ interface BareMetalInstanceCatalogItemFormValues {
   };
 }
 
-const initialValues: BareMetalInstanceCatalogItemFormValues = {
+const createInitialValues = (
+  role: ReturnType<typeof useSession>['role'],
+): BareMetalInstanceCatalogItemFormValues => ({
   title: '',
   description: '',
   template: EMPTY_LABELED_RESOURCE_REF,
-  scope: {
-    level: 'general',
-    tenant: EMPTY_LABELED_RESOURCE_REF,
-    project: EMPTY_LABELED_RESOURCE_REF,
-  },
+  scope: initialScopeForRole(role),
   fieldDefinitions: {
     run_strategy: { editable: true, default: 'ALWAYS' },
     user_data: { editable: true, default: '' },
     ssh_public_key: { editable: true, default: '' },
   },
-};
+});
 
 const getStepValidationSchema = (stepId: BareMetalStepId, t: TFunction) => {
   switch (stepId) {
@@ -102,6 +97,16 @@ const getStepValidationSchema = (stepId: BareMetalStepId, t: TFunction) => {
   }
 };
 
+// Validated once, in full, before the final submit — see CatalogItemWizardFooter.
+const getFullFormValidationSchema = (t: TFunction) =>
+  Yup.object({
+    title: Yup.string().required(t('Name is required')),
+    fieldDefinitions: Yup.object({
+      run_strategy: fieldDefinitionValueSchema(t),
+      ssh_public_key: fieldDefinitionValueSchema(t),
+    }),
+  });
+
 const buildFieldDefinitions = (values: BareMetalInstanceCatalogItemFormValues, t: TFunction) => [
   buildFieldDefinition('run_strategy', t('Run Strategy'), values.fieldDefinitions.run_strategy),
   buildFieldDefinition('user_data', t('User Data'), values.fieldDefinitions.user_data),
@@ -111,82 +116,6 @@ const buildFieldDefinitions = (values: BareMetalInstanceCatalogItemFormValues, t
     values.fieldDefinitions.ssh_public_key,
   ),
 ];
-
-interface FooterProps {
-  formik: FormikProps<BareMetalInstanceCatalogItemFormValues>;
-  setActiveStepId: (stepId: BareMetalStepId) => void;
-  setValidationAlert: (visible: boolean) => void;
-  isPending: boolean;
-}
-
-const BareMetalInstanceCatalogItemWizardFooter = ({
-  formik,
-  setActiveStepId,
-  setValidationAlert,
-  isPending,
-}: FooterProps) => {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { activeStep, goToStepByIndex } = useWizardContext();
-  const activeStepId = isStepId(activeStep?.id) ? activeStep.id : 'general';
-
-  useLayoutEffect(() => {
-    setActiveStepId(activeStepId);
-  }, [activeStepId, setActiveStepId]);
-
-  const stepIndex = activeStep?.index ?? 1;
-  const isFirst = stepIndex <= 1;
-  const isLast = activeStepId === 'access';
-
-  const handleBack = () => {
-    if (isFirst || isPending) {
-      return;
-    }
-    setValidationAlert(false);
-    goToStepByIndex(stepIndex - 1);
-  };
-
-  const handleNextOrSubmit = () => {
-    if (isPending) {
-      return;
-    }
-    void formik.validateForm().then((errors) => {
-      if (Object.keys(errors).length > 0) {
-        setValidationAlert(true);
-        return;
-      }
-      setValidationAlert(false);
-      if (isLast) {
-        void formik.submitForm();
-      } else {
-        goToStepByIndex(stepIndex + 1);
-      }
-    });
-  };
-
-  return (
-    <Flex
-      justifyContent={{ default: 'justifyContentFlexStart' }}
-      alignItems={{ default: 'alignItemsCenter' }}
-      gap={{ default: 'gapMd' }}
-    >
-      <Button variant="secondary" onClick={handleBack} isDisabled={isFirst || isPending}>
-        {t('Back')}
-      </Button>
-      <Button
-        variant="primary"
-        onClick={handleNextOrSubmit}
-        isDisabled={isPending}
-        isLoading={isPending && isLast}
-      >
-        {isLast ? t('Create') : t('Next')}
-      </Button>
-      <Button variant="link" onClick={() => navigate('/admin/catalog')} isDisabled={isPending}>
-        {t('Cancel')}
-      </Button>
-    </Flex>
-  );
-};
 
 export const BareMetalInstanceCatalogItemCreatePage = () => {
   const { t } = useTranslation();
@@ -200,10 +129,12 @@ export const BareMetalInstanceCatalogItemCreatePage = () => {
   const [validationAlert, setValidationAlert] = useState(false);
   const [submitError, setSubmitError] = useState<string>();
 
+  const initialValues = useMemo(() => createInitialValues(role), [role]);
   const validationSchema = useMemo(
     () => getStepValidationSchema(activeStepId, t),
     [activeStepId, t],
   );
+  const fullFormSchema = useMemo(() => getFullFormValidationSchema(t), [t]);
 
   const formik = useFormik<BareMetalInstanceCatalogItemFormValues>({
     initialValues,
@@ -213,24 +144,20 @@ export const BareMetalInstanceCatalogItemCreatePage = () => {
     onSubmit: async (values) => {
       setSubmitError(undefined);
       try {
-        await createBareMetalInstanceCatalogItem({
+        const payload: MessageInitShape<typeof BareMetalInstanceCatalogItemSchema> = {
           title: values.title.trim(),
           description: values.description.trim(),
           template: values.template.value,
           published: false,
-          ...(role === 'providerAdmin'
-            ? {
-                tenant: values.scope.level === 'organization' ? values.scope.tenant.value : '',
-                metadata: { name: slugify(values.title) },
-              }
-            : {
-                metadata: {
-                  name: slugify(values.title),
-                  project: values.scope.level === 'project' ? values.scope.project.value : '',
-                },
-              }),
-          fieldDefinitions: buildFieldDefinitions(values, t),
-        } as Parameters<typeof createBareMetalInstanceCatalogItem>[0]);
+          ...buildScopePayloadFields(values.scope, role, values.title),
+          // buildFieldDefinition()'s `default` is a decoded google.protobuf.Value init shape;
+          // MessageInitShape can't structurally verify it against the generated Value type, so
+          // this one property needs a cast (see buildFieldDefinition in fieldDefinitionValue.ts).
+          fieldDefinitions: buildFieldDefinitions(values, t) as MessageInitShape<
+            typeof BareMetalInstanceCatalogItemSchema
+          >['fieldDefinitions'],
+        };
+        await createBareMetalInstanceCatalogItem(payload);
         navigate('/admin/catalog');
       } catch (error) {
         setSubmitError(getErrorMessage(error));
@@ -270,9 +197,11 @@ export const BareMetalInstanceCatalogItemCreatePage = () => {
             isVisitRequired
             footer={
               <WizardFooterWrapper>
-                <BareMetalInstanceCatalogItemWizardFooter
+                <CatalogItemWizardFooter
                   formik={formik}
-                  setActiveStepId={setActiveStepId}
+                  stepIds={STEP_IDS}
+                  onActiveStepIdChange={(id) => setActiveStepId(id as BareMetalStepId)}
+                  fullFormSchema={fullFormSchema}
                   setValidationAlert={setValidationAlert}
                   isPending={isPending}
                 />

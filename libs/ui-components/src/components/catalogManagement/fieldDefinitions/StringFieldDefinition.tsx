@@ -1,8 +1,6 @@
-import { FormFieldGroup, FormFieldGroupHeader } from '@patternfly/react-core';
-
+import { FieldDefinitionGroup } from './FieldDefinitionGroup';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { InputField } from '../../Form/InputField';
-import { SwitchField } from '../../Form/SwitchField';
 
 interface StringFieldDefinitionProps {
   path: string;
@@ -23,14 +21,7 @@ export const StringFieldDefinition = ({
   const name = `fieldDefinitions.${path}`;
 
   return (
-    <FormFieldGroup
-      header={<FormFieldGroupHeader titleText={{ text: label, id: `${fieldId}-group` }} />}
-    >
-      <SwitchField
-        name={`${name}.editable`}
-        label={t('Editable')}
-        fieldId={`${fieldId}-editable`}
-      />
+    <FieldDefinitionGroup label={label} fieldId={fieldId} name={name}>
       <InputField
         name={`${name}.default`}
         label={t('Default value')}
@@ -44,6 +35,6 @@ export const StringFieldDefinition = ({
         fieldId={`${fieldId}-pattern`}
         helperText={t('Regular expression the tenant-provided value must match.')}
       />
-    </FormFieldGroup>
+    </FieldDefinitionGroup>
   );
 };

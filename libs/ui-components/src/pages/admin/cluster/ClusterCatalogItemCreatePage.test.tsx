@@ -26,7 +26,7 @@ const asQueryResult = <T,>(data: T) =>
 
 const mockSharedData = () => {
   vi.mocked(hostTypesApi.useHostTypes).mockReturnValue({
-    data: [],
+    data: [{ id: 'small', title: 'Small' }],
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -35,6 +35,12 @@ const mockSharedData = () => {
   vi.mocked(projectsApi.useProjects).mockReturnValue(
     asQueryResult([]) as unknown as ReturnType<typeof projectsApi.useProjects>,
   );
+};
+
+const fillFirstNodeSet = async (user: ReturnType<typeof renderPage>['user']) => {
+  await user.click(screen.getByLabelText(/^Host type/));
+  await user.click(screen.getByRole('option', { name: 'Small' }));
+  await user.type(screen.getByLabelText('Nodes'), '3');
 };
 
 const createFn = vi.fn(() => ({ object: { id: 'new-id', title: 'My Cluster' } }));
@@ -76,6 +82,18 @@ describe('ClusterCatalogItemCreatePage', () => {
     expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
   });
 
+  it('blocks advancing past Configuration when no node set is complete', async () => {
+    mockSharedData();
+    const { user } = renderPage();
+
+    await user.type(screen.getByLabelText(/^Name/), 'My Cluster');
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
+    expect(screen.getAllByText('Configuration').length).toBeGreaterThan(0);
+  });
+
   it('submits with published: false and navigates to the list page on success', async () => {
     mockSharedData();
     createFn.mockClear();
@@ -83,6 +101,7 @@ describe('ClusterCatalogItemCreatePage', () => {
 
     await user.type(screen.getByLabelText(/^Name/), 'My Cluster');
     await user.click(screen.getByRole('button', { name: 'Next' }));
+    await fillFirstNodeSet(user);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.click(screen.getByRole('button', { name: 'Create' }));

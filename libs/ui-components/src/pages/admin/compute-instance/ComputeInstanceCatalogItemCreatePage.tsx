@@ -1,12 +1,12 @@
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { type MessageInitShape } from '@bufbuild/protobuf';
 import {
   Alert,
   Breadcrumb,
   BreadcrumbItem,
   Button,
   Content,
-  Flex,
   PageSection,
   PageSectionTypes,
   Stack,
@@ -15,15 +15,22 @@ import {
   Wizard,
   WizardFooterWrapper,
   WizardStep,
-  useWizardContext,
 } from '@patternfly/react-core';
-import { type FormikProps, FormikProvider, useFormik } from 'formik';
+import { FormikProvider, useFormik } from 'formik';
 import type { TFunction } from 'i18next';
 import * as Yup from 'yup';
+
+import { ComputeInstanceCatalogItemSchema } from '@osac/types';
 
 import { useCreateComputeInstanceCatalogItem } from '../../../api/v1/compute-instance-catalog-item';
 import { useAdminComputeInstanceTemplates } from '../../../api/v1/compute-instance-templates';
 import { CatalogItemGeneralFields } from '../../../components/catalogManagement/CatalogItemGeneralFields';
+import {
+  type ScopeValues,
+  buildScopePayloadFields,
+  initialScopeForRole,
+} from '../../../components/catalogManagement/catalogItemScope';
+import { CatalogItemWizardFooter } from '../../../components/catalogManagement/CatalogItemWizardFooter';
 import {
   type FieldDefinitionValue,
   buildFieldDefinition,
@@ -39,7 +46,6 @@ import {
 import { useSession } from '../../../hooks/use-session';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { getErrorMessage } from '../../../utils/error';
-import { slugify } from '../../../utils/slug';
 
 const STEP_IDS = ['general', 'configuration', 'access'] as const;
 type VmStepId = (typeof STEP_IDS)[number];
@@ -49,15 +55,6 @@ const STEP_LABEL_KEYS: Record<VmStepId, string> = {
   configuration: 'Configuration',
   access: 'Access',
 };
-
-const isStepId = (id: string | number | undefined): id is VmStepId =>
-  typeof id === 'string' && (STEP_IDS as readonly string[]).includes(id);
-
-interface ScopeValues {
-  level: string;
-  tenant: LabeledResourceRef;
-  project: LabeledResourceRef;
-}
 
 interface AdditionalDiskEntry {
   rowId: string;
@@ -83,15 +80,13 @@ interface ComputeInstanceCatalogItemFormValues {
   };
 }
 
-const initialValues: ComputeInstanceCatalogItemFormValues = {
+const createInitialValues = (
+  role: ReturnType<typeof useSession>['role'],
+): ComputeInstanceCatalogItemFormValues => ({
   title: '',
   description: '',
   template: EMPTY_LABELED_RESOURCE_REF,
-  scope: {
-    level: 'general',
-    tenant: EMPTY_LABELED_RESOURCE_REF,
-    project: EMPTY_LABELED_RESOURCE_REF,
-  },
+  scope: initialScopeForRole(role),
   fieldDefinitions: {
     instance_type: { editable: true, default: EMPTY_LABELED_RESOURCE_REF },
     cores: { editable: true, default: '' },
@@ -104,7 +99,7 @@ const initialValues: ComputeInstanceCatalogItemFormValues = {
     is_windows: { editable: true, default: false },
     ssh_key: { editable: true, default: '' },
   },
-};
+});
 
 const getStepValidationSchema = (stepId: VmStepId, t: TFunction) => {
   switch (stepId) {
@@ -125,8 +120,26 @@ const getStepValidationSchema = (stepId: VmStepId, t: TFunction) => {
   }
 };
 
+// Validated once, in full, before the final submit — see CatalogItemWizardFooter.
+const getFullFormValidationSchema = (t: TFunction) =>
+  Yup.object({
+    title: Yup.string().required(t('Name is required')),
+    fieldDefinitions: Yup.object({
+      cores: fieldDefinitionValueSchema(t),
+      memory_gib: fieldDefinitionValueSchema(t),
+      boot_disk: Yup.object({ size_gib: fieldDefinitionValueSchema(t) }),
+      ssh_key: fieldDefinitionValueSchema(t),
+    }),
+  });
+
 const buildFieldDefinitions = (values: ComputeInstanceCatalogItemFormValues, t: TFunction) => [
-  buildFieldDefinition('instance_type', t('Instance Type'), values.fieldDefinitions.instance_type),
+  // instance_type's default is a LabeledResourceRef ({value, label}); flatten to the id before
+  // serializing, the same way `template` is flattened below — otherwise the display label leaks
+  // into the wire payload as a struct instead of a plain string id.
+  buildFieldDefinition('instance_type', t('Instance Type'), {
+    editable: values.fieldDefinitions.instance_type.editable,
+    default: values.fieldDefinitions.instance_type.default.value,
+  }),
   buildFieldDefinition('cores', t('Cores'), values.fieldDefinitions.cores),
   buildFieldDefinition('memory_gib', t('Memory (GiB)'), values.fieldDefinitions.memory_gib),
   buildFieldDefinition('image', t('Image'), values.fieldDefinitions.image),
@@ -154,82 +167,6 @@ const buildFieldDefinitions = (values: ComputeInstanceCatalogItemFormValues, t: 
   }),
 ];
 
-interface FooterProps {
-  formik: FormikProps<ComputeInstanceCatalogItemFormValues>;
-  setActiveStepId: (stepId: VmStepId) => void;
-  setValidationAlert: (visible: boolean) => void;
-  isPending: boolean;
-}
-
-const ComputeInstanceCatalogItemWizardFooter = ({
-  formik,
-  setActiveStepId,
-  setValidationAlert,
-  isPending,
-}: FooterProps) => {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { activeStep, goToStepByIndex } = useWizardContext();
-  const activeStepId = isStepId(activeStep?.id) ? activeStep.id : 'general';
-
-  useLayoutEffect(() => {
-    setActiveStepId(activeStepId);
-  }, [activeStepId, setActiveStepId]);
-
-  const stepIndex = activeStep?.index ?? 1;
-  const isFirst = stepIndex <= 1;
-  const isLast = activeStepId === 'access';
-
-  const handleBack = () => {
-    if (isFirst || isPending) {
-      return;
-    }
-    setValidationAlert(false);
-    goToStepByIndex(stepIndex - 1);
-  };
-
-  const handleNextOrSubmit = () => {
-    if (isPending) {
-      return;
-    }
-    void formik.validateForm().then((errors) => {
-      if (Object.keys(errors).length > 0) {
-        setValidationAlert(true);
-        return;
-      }
-      setValidationAlert(false);
-      if (isLast) {
-        void formik.submitForm();
-      } else {
-        goToStepByIndex(stepIndex + 1);
-      }
-    });
-  };
-
-  return (
-    <Flex
-      justifyContent={{ default: 'justifyContentFlexStart' }}
-      alignItems={{ default: 'alignItemsCenter' }}
-      gap={{ default: 'gapMd' }}
-    >
-      <Button variant="secondary" onClick={handleBack} isDisabled={isFirst || isPending}>
-        {t('Back')}
-      </Button>
-      <Button
-        variant="primary"
-        onClick={handleNextOrSubmit}
-        isDisabled={isPending}
-        isLoading={isPending && isLast}
-      >
-        {isLast ? t('Create') : t('Next')}
-      </Button>
-      <Button variant="link" onClick={() => navigate('/admin/catalog')} isDisabled={isPending}>
-        {t('Cancel')}
-      </Button>
-    </Flex>
-  );
-};
-
 export const ComputeInstanceCatalogItemCreatePage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -241,10 +178,12 @@ export const ComputeInstanceCatalogItemCreatePage = () => {
   const [validationAlert, setValidationAlert] = useState(false);
   const [submitError, setSubmitError] = useState<string>();
 
+  const initialValues = useMemo(() => createInitialValues(role), [role]);
   const validationSchema = useMemo(
     () => getStepValidationSchema(activeStepId, t),
     [activeStepId, t],
   );
+  const fullFormSchema = useMemo(() => getFullFormValidationSchema(t), [t]);
 
   const formik = useFormik<ComputeInstanceCatalogItemFormValues>({
     initialValues,
@@ -254,24 +193,20 @@ export const ComputeInstanceCatalogItemCreatePage = () => {
     onSubmit: async (values) => {
       setSubmitError(undefined);
       try {
-        await createComputeInstanceCatalogItem({
+        const payload: MessageInitShape<typeof ComputeInstanceCatalogItemSchema> = {
           title: values.title.trim(),
           description: values.description.trim(),
           template: values.template.value,
           published: false,
-          ...(role === 'providerAdmin'
-            ? {
-                tenant: values.scope.level === 'organization' ? values.scope.tenant.value : '',
-                metadata: { name: slugify(values.title) },
-              }
-            : {
-                metadata: {
-                  name: slugify(values.title),
-                  project: values.scope.level === 'project' ? values.scope.project.value : '',
-                },
-              }),
-          fieldDefinitions: buildFieldDefinitions(values, t),
-        } as Parameters<typeof createComputeInstanceCatalogItem>[0]);
+          ...buildScopePayloadFields(values.scope, role, values.title),
+          // buildFieldDefinition()'s `default` is a decoded google.protobuf.Value init shape;
+          // MessageInitShape can't structurally verify it against the generated Value type, so
+          // this one property needs a cast (see buildFieldDefinition in fieldDefinitionValue.ts).
+          fieldDefinitions: buildFieldDefinitions(values, t) as MessageInitShape<
+            typeof ComputeInstanceCatalogItemSchema
+          >['fieldDefinitions'],
+        };
+        await createComputeInstanceCatalogItem(payload);
         navigate('/admin/catalog');
       } catch (error) {
         setSubmitError(getErrorMessage(error));
@@ -311,9 +246,11 @@ export const ComputeInstanceCatalogItemCreatePage = () => {
             isVisitRequired
             footer={
               <WizardFooterWrapper>
-                <ComputeInstanceCatalogItemWizardFooter
+                <CatalogItemWizardFooter
                   formik={formik}
-                  setActiveStepId={setActiveStepId}
+                  stepIds={STEP_IDS}
+                  onActiveStepIdChange={(id) => setActiveStepId(id as VmStepId)}
+                  fullFormSchema={fullFormSchema}
                   setValidationAlert={setValidationAlert}
                   isPending={isPending}
                 />

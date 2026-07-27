@@ -1,8 +1,6 @@
-import { FormFieldGroup, FormFieldGroupHeader } from '@patternfly/react-core';
-
+import { FieldDefinitionGroup } from './FieldDefinitionGroup';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { SelectField, type SelectFieldOption } from '../../Form/SelectField';
-import { SwitchField } from '../../Form/SwitchField';
 
 interface ResourceSelectorFieldDefinitionProps {
   path: string;
@@ -23,14 +21,7 @@ export const ResourceSelectorFieldDefinition = ({
   const name = `fieldDefinitions.${path}`;
 
   return (
-    <FormFieldGroup
-      header={<FormFieldGroupHeader titleText={{ text: label, id: `${fieldId}-group` }} />}
-    >
-      <SwitchField
-        name={`${name}.editable`}
-        label={t('Editable')}
-        fieldId={`${fieldId}-editable`}
-      />
+    <FieldDefinitionGroup label={label} fieldId={fieldId} name={name}>
       <SelectField
         name={`${name}.default`}
         label={t('Default value')}
@@ -39,6 +30,6 @@ export const ResourceSelectorFieldDefinition = ({
         isLoading={isLoading}
         placeholder={t('Select a value')}
       />
-    </FormFieldGroup>
+    </FieldDefinitionGroup>
   );
 };

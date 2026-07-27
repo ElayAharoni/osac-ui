@@ -48,4 +48,9 @@ describe('plainToProtobufValue / protobufValueToPlain round trip', () => {
     const value = { cores: 4, name: 'default', enabled: true };
     expect(protobufValueToPlain(plainToProtobufValue(value))).toEqual(value);
   });
+
+  it('round-trips a nested structure (object containing an array of objects)', () => {
+    const value = { nodeSets: [{ hostType: 'small', size: 3 }] };
+    expect(protobufValueToPlain(plainToProtobufValue(value))).toEqual(value);
+  });
 });

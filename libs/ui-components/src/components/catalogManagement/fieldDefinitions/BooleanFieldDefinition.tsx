@@ -1,5 +1,4 @@
-import { FormFieldGroup, FormFieldGroupHeader } from '@patternfly/react-core';
-
+import { FieldDefinitionGroup } from './FieldDefinitionGroup';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { SwitchField } from '../../Form/SwitchField';
 
@@ -14,19 +13,12 @@ export const BooleanFieldDefinition = ({ path, label, fieldId }: BooleanFieldDef
   const name = `fieldDefinitions.${path}`;
 
   return (
-    <FormFieldGroup
-      header={<FormFieldGroupHeader titleText={{ text: label, id: `${fieldId}-group` }} />}
-    >
-      <SwitchField
-        name={`${name}.editable`}
-        label={t('Editable')}
-        fieldId={`${fieldId}-editable`}
-      />
+    <FieldDefinitionGroup label={label} fieldId={fieldId} name={name}>
       <SwitchField
         name={`${name}.default`}
         label={t('Default value')}
         fieldId={`${fieldId}-default`}
       />
-    </FormFieldGroup>
+    </FieldDefinitionGroup>
   );
 };

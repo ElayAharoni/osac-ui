@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -20,7 +21,7 @@ vi.mock(
   }),
 );
 vi.mock('@osac/ui-components/components/Page/ListPage', () => ({
-  default: ({ children }: { children: React.ReactNode }) => (
+  default: ({ children }: { children: ReactNode }) => (
     <div>Catalog management list page{children}</div>
   ),
 }));
