@@ -2,8 +2,11 @@ import { createRouterTransport } from '@connectrpc/connect';
 import { screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ClusterCatalogItems } from '@osac/types';
-import { ClusterCatalogItems as PrivateClusterCatalogItems } from '@osac/types/private';
+import { ClusterCatalogItems, ClusterTemplates } from '@osac/types';
+import {
+  ClusterCatalogItems as PrivateClusterCatalogItems,
+  ClusterTemplates as PrivateClusterTemplates,
+} from '@osac/types/private';
 
 import { ClusterCatalogItemCreatePage } from './ClusterCatalogItemCreatePage';
 import * as hostTypesApi from '../../../api/v1/host-types';
@@ -37,9 +40,12 @@ const mockSharedData = () => {
   );
 };
 
+const selectTemplate = async (user: ReturnType<typeof renderPage>['user']) => {
+  await user.click(screen.getByLabelText(/^Template/));
+  await user.click(screen.getByRole('option', { name: 'Template One' }));
+};
+
 const fillFirstNodeSet = async (user: ReturnType<typeof renderPage>['user']) => {
-  await user.click(screen.getByLabelText(/^Host type/));
-  await user.click(screen.getByRole('option', { name: 'Small' }));
   await user.type(screen.getByLabelText('Nodes'), '3');
 };
 
@@ -49,6 +55,18 @@ const renderPage = () => {
   const transport = createRouterTransport((router) => {
     router.service(ClusterCatalogItems, { create: createFn });
     router.service(PrivateClusterCatalogItems, { create: createFn });
+    router.service(ClusterTemplates, { list: () => ({ items: [] }) });
+    router.service(PrivateClusterTemplates, {
+      list: () => ({
+        items: [
+          {
+            id: 'tmpl-1',
+            metadata: { name: 'Template One' },
+            nodeSets: { workers: { hostType: 'small', size: 3 } },
+          },
+        ],
+      }),
+    });
   });
   return renderWithProviders(
     <SessionProvider role="providerAdmin" username="test-user">
@@ -82,12 +100,29 @@ describe('ClusterCatalogItemCreatePage', () => {
     expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
   });
 
-  it('blocks advancing past Configuration when no node set is complete', async () => {
+  it('blocks advancing past General when no template is selected', async () => {
     mockSharedData();
     const { user } = renderPage();
 
     await user.type(screen.getByLabelText(/^Name/), 'My Cluster');
     await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
+    expect(screen.getAllByText('General').length).toBeGreaterThan(0);
+  });
+
+  it('scopes node sets to the selected template and blocks advancing until sizes are set', async () => {
+    mockSharedData();
+    const { user } = renderPage();
+
+    await user.type(screen.getByLabelText(/^Name/), 'My Cluster');
+    await selectTemplate(user);
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(screen.getByText('Node set: workers')).toBeInTheDocument();
+    expect(screen.getByText('Host type: Small')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Host type/)).not.toBeInTheDocument();
+
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
     expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
@@ -100,6 +135,7 @@ describe('ClusterCatalogItemCreatePage', () => {
     const { user } = renderPage();
 
     await user.type(screen.getByLabelText(/^Name/), 'My Cluster');
+    await selectTemplate(user);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await fillFirstNodeSet(user);
     await user.click(screen.getByRole('button', { name: 'Next' }));
@@ -108,9 +144,34 @@ describe('ClusterCatalogItemCreatePage', () => {
 
     await waitFor(() => expect(createFn).toHaveBeenCalled());
     const request = (createFn.mock.calls[0] as unknown[])[0] as {
-      object: { published: boolean; title: string };
+      object: {
+        published: boolean;
+        title: string;
+        fieldDefinitions: { path: string; default: unknown }[];
+      };
     };
     expect(request.object.published).toBe(false);
     expect(request.object.title).toBe('My Cluster');
+    const nodeSets = request.object.fieldDefinitions.find((fd) => fd.path === 'node_sets');
+    expect(nodeSets?.default).toMatchObject({
+      kind: {
+        case: 'structValue',
+        value: {
+          fields: {
+            workers: {
+              kind: {
+                case: 'structValue',
+                value: {
+                  fields: {
+                    hostType: { kind: { case: 'stringValue', value: 'small' } },
+                    size: { kind: { case: 'numberValue', value: 3 } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
   });
 });

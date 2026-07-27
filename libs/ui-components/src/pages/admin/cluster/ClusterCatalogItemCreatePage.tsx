@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { type MessageInitShape } from '@bufbuild/protobuf';
 import {
@@ -36,7 +36,10 @@ import {
   buildFieldDefinition,
   fieldDefinitionValueSchema,
 } from '../../../components/catalogManagement/fieldDefinitions/fieldDefinitionValue';
-import type { NodeSetsFieldValue } from '../../../components/catalogManagement/fieldDefinitions/NodeSetsFieldEditor';
+import type {
+  NodeSetsFieldValue,
+  NodeSetsTemplateLike,
+} from '../../../components/catalogManagement/fieldDefinitions/NodeSetsFieldEditor';
 import { ClusterAccessStep } from '../../../components/catalogManagement/steps/cluster/ClusterAccessStep';
 import { ClusterConfigurationStep } from '../../../components/catalogManagement/steps/cluster/ClusterConfigurationStep';
 import { ClusterNetworkingStep } from '../../../components/catalogManagement/steps/cluster/ClusterNetworkingStep';
@@ -90,9 +93,8 @@ const createInitialValues = (
   fieldDefinitions: {
     release_image: { editable: true, default: '' },
     node_sets: {
-      entries: [{ rowId: crypto.randomUUID(), hostType: EMPTY_LABELED_RESOURCE_REF, size: '' }],
+      sizeByKey: {},
       editable: true,
-      allowAddRemove: true,
     },
     network: {
       pod_cidr: { editable: true, default: '', validation: { pattern: IPV4_CIDR_PATTERN } },
@@ -113,51 +115,50 @@ const cidrFormatTest = (t: TFunction) => ({
   test: (value: unknown) => typeof value === 'string' && isValidCidr(value, 'ipv4'),
 });
 
-const nodeSetEntrySchema = (t: TFunction) =>
-  Yup.object({
-    hostType: Yup.object({ value: Yup.string().required() }).test(
-      'host-type-selected',
-      t('Host type is required'),
-      (hostType) => Boolean(hostType?.value?.trim()),
-    ),
-    size: Yup.string().test(
-      'positive-size',
-      t('Size must be a positive number'),
-      (value) => Number.isFinite(Number(value)) && Number(value) > 0,
-    ),
-  });
+const templateRequiredSchema = (t: TFunction) =>
+  Yup.object({ value: Yup.string().required() }).test(
+    'template-selected',
+    t('Template is required'),
+    (template) => Boolean(template?.value?.trim()),
+  );
 
-const nodeSetsSchema = (t: TFunction) =>
+// Node sets are entirely determined by the selected cluster template — fulfillment-service rejects
+// any node set whose key or host type doesn't match the template (see
+// `PrivateClustersServer.validateNodeSets`). An admin can only provide a default `size` per
+// template-defined node set, so the schema is built dynamically, one positive-size check per
+// current template node-set key, rather than a fixed shape.
+const nodeSetsSchema = (t: TFunction, templateNodeSetKeys: string[]) =>
   Yup.object({
-    entries: Yup.array()
-      .of(nodeSetEntrySchema(t))
-      .min(1, t('At least one node set is required'))
-      .test(
-        'no-duplicate-host-types',
-        t('Each node set must use a different host type'),
-        (entries) => {
-          if (!entries) {
-            return true;
-          }
-          const hostTypeIds = entries
-            .map((entry) => entry?.hostType?.value?.trim())
-            .filter((value): value is string => Boolean(value));
-          return new Set(hostTypeIds).size === hostTypeIds.length;
-        },
+    sizeByKey: Yup.object(
+      Object.fromEntries(
+        templateNodeSetKeys.map((key) => [
+          key,
+          Yup.string().test(
+            'positive-size',
+            t('Size must be a positive number'),
+            (value) => Number.isFinite(Number(value)) && Number(value) > 0,
+          ),
+        ]),
       ),
+    ),
   });
 
-const getStepValidationSchema = (stepId: ClusterStepId, t: TFunction) => {
+const getStepValidationSchema = (
+  stepId: ClusterStepId,
+  t: TFunction,
+  templateNodeSetKeys: string[],
+) => {
   switch (stepId) {
     case 'general':
       return Yup.object({
         title: Yup.string().required(t('Name is required')),
+        template: templateRequiredSchema(t),
       });
     case 'configuration':
       return Yup.object({
         fieldDefinitions: Yup.object({
           release_image: fieldDefinitionValueSchema(t),
-          node_sets: nodeSetsSchema(t),
+          node_sets: nodeSetsSchema(t, templateNodeSetKeys),
         }),
       });
     case 'networking':
@@ -182,12 +183,13 @@ const getStepValidationSchema = (stepId: ClusterStepId, t: TFunction) => {
 // Validated once, in full, before the final submit — the active step's own schema (above) only
 // covers its own fields, which would let a field cleared on an earlier, already-visited step
 // through undetected (see CatalogItemWizardFooter).
-const getFullFormValidationSchema = (t: TFunction) =>
+const getFullFormValidationSchema = (t: TFunction, templateNodeSetKeys: string[]) =>
   Yup.object({
     title: Yup.string().required(t('Name is required')),
+    template: templateRequiredSchema(t),
     fieldDefinitions: Yup.object({
       release_image: fieldDefinitionValueSchema(t),
-      node_sets: nodeSetsSchema(t),
+      node_sets: nodeSetsSchema(t, templateNodeSetKeys),
       network: Yup.object({
         pod_cidr: fieldDefinitionValueSchema(t, cidrFormatTest(t)),
         service_cidr: fieldDefinitionValueSchema(t, cidrFormatTest(t)),
@@ -206,15 +208,19 @@ const parseOptionalNumber = (value: string | undefined): number | undefined => {
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
-const buildNodeSetsDefault = (nodeSets: NodeSetsFieldValue): Record<string, unknown> => {
+// Node sets are keyed and host-typed by the template (see nodeSetsSchema above) — only the size
+// the admin entered for each template key is ever taken from the form.
+const buildNodeSetsDefault = (
+  nodeSets: NodeSetsFieldValue,
+  template: NodeSetsTemplateLike | undefined,
+): Record<string, unknown> => {
   const result: Record<string, { hostType: string; size: number }> = {};
-  for (const entry of nodeSets.entries) {
-    const hostTypeId = entry.hostType.value.trim();
-    const size = Number(entry.size);
-    if (!hostTypeId || !Number.isFinite(size) || size <= 0) {
+  for (const [key, templateNodeSet] of Object.entries(template?.nodeSets ?? {})) {
+    const size = Number(nodeSets.sizeByKey[key]);
+    if (!Number.isFinite(size) || size <= 0) {
       continue;
     }
-    result[hostTypeId] = { hostType: hostTypeId, size };
+    result[key] = { hostType: templateNodeSet.hostType, size };
   }
   return result;
 };
@@ -241,7 +247,11 @@ const buildNodeSetsValidation = (
   };
 };
 
-const buildFieldDefinitions = (values: ClusterCatalogItemFormValues, t: TFunction) => [
+const buildFieldDefinitions = (
+  values: ClusterCatalogItemFormValues,
+  t: TFunction,
+  template: NodeSetsTemplateLike | undefined,
+) => [
   buildFieldDefinition('release_image', t('Release Image'), values.fieldDefinitions.release_image),
   buildFieldDefinition('network.pod_cidr', t('Pod CIDR'), values.fieldDefinitions.network.pod_cidr),
   buildFieldDefinition(
@@ -257,7 +267,7 @@ const buildFieldDefinitions = (values: ClusterCatalogItemFormValues, t: TFunctio
   buildFieldDefinition('pull_secret', t('Pull Secret'), values.fieldDefinitions.pull_secret),
   buildFieldDefinition('node_sets', t('Node Sets'), {
     editable: values.fieldDefinitions.node_sets.editable,
-    default: buildNodeSetsDefault(values.fieldDefinitions.node_sets),
+    default: buildNodeSetsDefault(values.fieldDefinitions.node_sets, template),
     validation: buildNodeSetsValidation(values.fieldDefinitions.node_sets),
   }),
 ];
@@ -271,13 +281,28 @@ export const ClusterCatalogItemCreatePage = () => {
   const [activeStepId, setActiveStepId] = useState<ClusterStepId>('general');
   const [validationAlert, setValidationAlert] = useState(false);
   const [submitError, setSubmitError] = useState<string>();
+  // Mirrors formik.values.template.value so the node-set validation schema (below) can react to the
+  // template the admin picks — read directly from Formik state once `formik` exists (see effect).
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
+
+  const selectedTemplate = useMemo(
+    () => templates.find((template) => template.id === selectedTemplateId),
+    [templates, selectedTemplateId],
+  );
+  const templateNodeSetKeys = useMemo(
+    () => Object.keys(selectedTemplate?.nodeSets ?? {}).sort(),
+    [selectedTemplate],
+  );
 
   const initialValues = useMemo(() => createInitialValues(role), [role]);
   const validationSchema = useMemo(
-    () => getStepValidationSchema(activeStepId, t),
-    [activeStepId, t],
+    () => getStepValidationSchema(activeStepId, t, templateNodeSetKeys),
+    [activeStepId, t, templateNodeSetKeys],
   );
-  const fullFormSchema = useMemo(() => getFullFormValidationSchema(t), [t]);
+  const fullFormSchema = useMemo(
+    () => getFullFormValidationSchema(t, templateNodeSetKeys),
+    [t, templateNodeSetKeys],
+  );
 
   const formik = useFormik<ClusterCatalogItemFormValues>({
     initialValues,
@@ -287,6 +312,7 @@ export const ClusterCatalogItemCreatePage = () => {
     onSubmit: async (values) => {
       setSubmitError(undefined);
       try {
+        const template = templates.find((candidate) => candidate.id === values.template.value);
         const payload: MessageInitShape<typeof ClusterCatalogItemSchema> = {
           title: values.title.trim(),
           description: values.description.trim(),
@@ -296,7 +322,7 @@ export const ClusterCatalogItemCreatePage = () => {
           // buildFieldDefinition()'s `default` is a decoded google.protobuf.Value init shape;
           // MessageInitShape can't structurally verify it against the generated Value type, so
           // this one property needs a cast (see buildFieldDefinition in fieldDefinitionValue.ts).
-          fieldDefinitions: buildFieldDefinitions(values, t) as MessageInitShape<
+          fieldDefinitions: buildFieldDefinitions(values, t, template) as MessageInitShape<
             typeof ClusterCatalogItemSchema
           >['fieldDefinitions'],
         };
@@ -307,6 +333,10 @@ export const ClusterCatalogItemCreatePage = () => {
       }
     },
   });
+
+  useEffect(() => {
+    setSelectedTemplateId(formik.values.template.value);
+  }, [formik.values.template.value]);
 
   const templateOptions = templates.map((template) => ({
     value: template.id,
@@ -377,7 +407,9 @@ export const ClusterCatalogItemCreatePage = () => {
                         templatesLoading={templatesLoading}
                       />
                     ) : null}
-                    {stepId === 'configuration' ? <ClusterConfigurationStep /> : null}
+                    {stepId === 'configuration' ? (
+                      <ClusterConfigurationStep templates={templates} />
+                    ) : null}
                     {stepId === 'networking' ? <ClusterNetworkingStep /> : null}
                     {stepId === 'access' ? <ClusterAccessStep /> : null}
                   </Stack>

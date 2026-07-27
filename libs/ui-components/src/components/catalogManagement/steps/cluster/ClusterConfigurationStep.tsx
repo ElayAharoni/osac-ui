@@ -1,9 +1,25 @@
+import { useFormikContext } from 'formik';
+
 import { useTranslation } from '../../../../hooks/useTranslation';
-import { NodeSetsFieldEditor } from '../../fieldDefinitions/NodeSetsFieldEditor';
+import type { LabeledResourceRef } from '../../../Form/labeledResourceRef';
+import {
+  NodeSetsFieldEditor,
+  type NodeSetsTemplateLike,
+} from '../../fieldDefinitions/NodeSetsFieldEditor';
 import { StringFieldDefinition } from '../../fieldDefinitions/StringFieldDefinition';
 
-export const ClusterConfigurationStep = () => {
+interface ClusterConfigurationStepProps {
+  templates: ({ id: string } & NodeSetsTemplateLike)[];
+}
+
+interface ClusterConfigurationFormValues {
+  template: LabeledResourceRef;
+}
+
+export const ClusterConfigurationStep = ({ templates }: ClusterConfigurationStepProps) => {
   const { t } = useTranslation();
+  const { values } = useFormikContext<ClusterConfigurationFormValues>();
+  const selectedTemplate = templates.find((template) => template.id === values.template.value);
 
   return (
     <>
@@ -12,7 +28,7 @@ export const ClusterConfigurationStep = () => {
         label={t('Release Image')}
         fieldId="release-image"
       />
-      <NodeSetsFieldEditor />
+      <NodeSetsFieldEditor template={selectedTemplate} />
     </>
   );
 };

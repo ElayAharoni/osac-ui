@@ -1,90 +1,82 @@
 import { useMemo } from 'react';
 import {
-  ActionGroup,
   Alert,
-  Button,
+  Content,
   FormFieldGroup,
   FormFieldGroupHeader,
   Stack,
   StackItem,
 } from '@patternfly/react-core';
-import MinusCircleIcon from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
-import PlusCircleIcon from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
-import { useFormikContext } from 'formik';
 
 import { hostTypeDisplayName, useHostTypes } from '../../../api/v1/host-types';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { getErrorMessage } from '../../../utils/error';
 import { InputField } from '../../Form/InputField';
-import { EMPTY_LABELED_RESOURCE_REF } from '../../Form/labeledResourceRef';
-import { SelectField } from '../../Form/SelectField';
 import { SwitchField } from '../../Form/SwitchField';
 
 const NODE_SETS_NAME = 'fieldDefinitions.node_sets';
 
-export interface NodeSetEntry {
-  rowId: string;
-  hostType: { value: string; label: string };
-  size: string;
-}
-
 export interface NodeSetsFieldValue {
-  entries: NodeSetEntry[];
+  /** Default node-set size per template node-set key — the only thing an admin can set; host type
+   * and the set of keys are entirely determined by the selected cluster template. */
+  sizeByKey: Record<string, string>;
   editable: boolean;
-  allowAddRemove: boolean;
   sizeMin?: string;
   sizeMax?: string;
 }
 
-interface NodeSetsFormValues {
-  fieldDefinitions: {
-    node_sets: NodeSetsFieldValue;
-  };
+/** The subset of `ClusterTemplate` (public or private — both are structurally compatible here) that
+ * this editor needs. */
+export interface NodeSetsTemplateLike {
+  nodeSets: Record<string, { hostType: string }>;
 }
 
-const createEmptyEntry = (rowId: string): NodeSetEntry => ({
-  rowId,
-  hostType: EMPTY_LABELED_RESOURCE_REF,
-  size: '',
-});
+interface NodeSetsFieldEditorProps {
+  /**
+   * The cluster template selected in the General step. fulfillment-service validates that a
+   * cluster's `node_sets` map keys and host types exactly match the template's own `node_sets` —
+   * admins can only provide a default `size` per template-defined node set, not add, remove, or
+   * repoint its host type (see fulfillment-service's `PrivateClustersServer.validateNodeSets`).
+   */
+  template: NodeSetsTemplateLike | undefined;
+}
 
-export const NodeSetsFieldEditor = () => {
+export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
   const { t } = useTranslation();
-  const { values, setFieldValue } = useFormikContext<NodeSetsFormValues>();
   const {
     data: hostTypes = [],
     isLoading: hostTypesLoading,
     error: hostTypesError,
   } = useHostTypes();
-  const entries = values.fieldDefinitions.node_sets.entries;
 
-  const selectedHostTypeIds = useMemo(
-    () => new Set(entries.map((entry) => entry.hostType.value.trim()).filter(Boolean)),
-    [entries],
+  const hostTypeById = useMemo(
+    () => new Map(hostTypes.map((hostType) => [hostType.id, hostType])),
+    [hostTypes],
   );
 
-  const hostTypeOptionsForRow = (rowIndex: number) => {
-    const currentHostTypeId = entries[rowIndex]?.hostType.value.trim() ?? '';
-    return hostTypes.map((hostType) => ({
-      value: hostType.id,
-      label: hostTypeDisplayName(hostType),
-      isDisabled: selectedHostTypeIds.has(hostType.id) && hostType.id !== currentHostTypeId,
-    }));
+  const templateNodeSetKeys = useMemo(
+    () => Object.keys(template?.nodeSets ?? {}).sort(),
+    [template],
+  );
+
+  const hostTypeLabel = (hostTypeId: string): string => {
+    if (!hostTypeId) {
+      return t('Unknown');
+    }
+    const hostType = hostTypeById.get(hostTypeId);
+    if (hostType) {
+      return hostTypeDisplayName(hostType);
+    }
+    return hostTypesLoading ? t('Loading...') : hostTypeId;
   };
 
-  const addRow = () => {
-    void setFieldValue(`${NODE_SETS_NAME}.entries`, [
-      ...entries,
-      createEmptyEntry(crypto.randomUUID()),
-    ]);
-  };
+  if (!template) {
+    return <Alert variant="info" isInline title={t('Select a template to configure node sets')} />;
+  }
 
-  const removeRow = (rowIndex: number) => {
-    void setFieldValue(
-      `${NODE_SETS_NAME}.entries`,
-      entries.filter((_, index) => index !== rowIndex),
-    );
-  };
+  if (templateNodeSetKeys.length === 0) {
+    return <Alert variant="info" isInline title={t('This template has no node sets defined')} />;
+  }
 
   return (
     <Stack hasGutter>
@@ -101,11 +93,6 @@ export const NodeSetsFieldEditor = () => {
           label={t('Editable')}
           fieldId="node-sets-editable"
         />
-        <SwitchField
-          name={`${NODE_SETS_NAME}.allowAddRemove`}
-          label={t('Allow add/remove')}
-          fieldId="node-sets-allow-add-remove"
-        />
       </StackItem>
       <StackItem>
         <InputField
@@ -121,57 +108,30 @@ export const NodeSetsFieldEditor = () => {
           type="number"
         />
       </StackItem>
-      {entries.map((entry, rowIndex) => (
-        <StackItem key={entry.rowId}>
-          <FormFieldGroup
-            header={
-              <FormFieldGroupHeader
-                titleText={{
-                  text: t('Node set {{number}}', { number: rowIndex + 1 }),
-                  id: `node-set-group-${entry.rowId}`,
-                }}
-                actions={
-                  rowIndex > 0 ? (
-                    <Button
-                      variant="plain"
-                      aria-label={t('Remove node set {{number}}', { number: rowIndex + 1 })}
-                      onClick={() => removeRow(rowIndex)}
-                      icon={<MinusCircleIcon />}
-                    />
-                  ) : undefined
-                }
+      {templateNodeSetKeys.map((key) => {
+        const hostTypeId = template.nodeSets[key]?.hostType ?? '';
+        return (
+          <StackItem key={key}>
+            <FormFieldGroup
+              header={
+                <FormFieldGroupHeader
+                  titleText={{ text: t('Node set: {{key}}', { key }), id: `node-set-group-${key}` }}
+                />
+              }
+            >
+              <Content component="p">
+                {t('Host type: {{hostType}}', { hostType: hostTypeLabel(hostTypeId) })}
+              </Content>
+              <InputField
+                name={`${NODE_SETS_NAME}.sizeByKey.${key}`}
+                label={t('Nodes')}
+                fieldId={`node-set-size-${key}`}
+                type="number"
               />
-            }
-          >
-            <SelectField
-              name={`${NODE_SETS_NAME}.entries.${rowIndex}.hostType`}
-              label={t('Host type')}
-              fieldId={`node-set-host-type-${entry.rowId}`}
-              options={hostTypeOptionsForRow(rowIndex)}
-              isLoading={hostTypesLoading}
-              placeholder={t('Select host type')}
-            />
-            <InputField
-              name={`${NODE_SETS_NAME}.entries.${rowIndex}.size`}
-              label={t('Nodes')}
-              fieldId={`node-set-size-${entry.rowId}`}
-              type="number"
-            />
-          </FormFieldGroup>
-        </StackItem>
-      ))}
-      <StackItem>
-        <ActionGroup>
-          <Button
-            variant="link"
-            icon={<PlusCircleIcon />}
-            onClick={addRow}
-            isDisabled={hostTypesLoading || Boolean(hostTypesError)}
-          >
-            {t('Add node set')}
-          </Button>
-        </ActionGroup>
-      </StackItem>
+            </FormFieldGroup>
+          </StackItem>
+        );
+      })}
     </Stack>
   );
 };

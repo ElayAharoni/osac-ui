@@ -12,18 +12,36 @@ vi.mock('../../../../api/v1/host-types', () => ({
 }));
 
 const initialValues = {
+  template: { value: 'tmpl-1', label: 'Template One' },
   fieldDefinitions: {
     release_image: { editable: false, default: '' },
-    node_sets: {
-      entries: [{ rowId: 'row-1', hostType: { value: '', label: '' }, size: '' }],
-      editable: true,
-      allowAddRemove: true,
-    },
+    node_sets: { sizeByKey: {}, editable: true },
   },
 };
 
+const templates = [{ id: 'tmpl-1', nodeSets: { workers: { hostType: 'small' } } }];
+
 describe('ClusterConfigurationStep', () => {
-  it('renders the release image and node sets fields', () => {
+  it('renders the release image and node sets fields for the selected template', () => {
+    vi.mocked(hostTypesApi.useHostTypes).mockReturnValue({
+      data: [{ id: 'small', title: 'Small' }],
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof hostTypesApi.useHostTypes>);
+
+    renderWithProviders(
+      <Formik initialValues={initialValues} onSubmit={() => undefined}>
+        <ClusterConfigurationStep templates={templates} />
+      </Formik>,
+    );
+
+    expect(screen.getByText('Release Image')).toBeInTheDocument();
+    expect(screen.getByText('Node set: workers')).toBeInTheDocument();
+    expect(screen.getByText('Host type: Small')).toBeInTheDocument();
+  });
+
+  it('prompts for a template when the selected template id has no match', () => {
     vi.mocked(hostTypesApi.useHostTypes).mockReturnValue({
       data: [],
       isLoading: false,
@@ -32,12 +50,14 @@ describe('ClusterConfigurationStep', () => {
     } as unknown as ReturnType<typeof hostTypesApi.useHostTypes>);
 
     renderWithProviders(
-      <Formik initialValues={initialValues} onSubmit={() => undefined}>
-        <ClusterConfigurationStep />
+      <Formik
+        initialValues={{ ...initialValues, template: { value: '', label: '' } }}
+        onSubmit={() => undefined}
+      >
+        <ClusterConfigurationStep templates={templates} />
       </Formik>,
     );
 
-    expect(screen.getByText('Release Image')).toBeInTheDocument();
-    expect(screen.getByText('Node set 1')).toBeInTheDocument();
+    expect(screen.getByText('Select a template to configure node sets')).toBeInTheDocument();
   });
 });
