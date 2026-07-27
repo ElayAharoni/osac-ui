@@ -1,8 +1,8 @@
 import { useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Flex, useWizardContext } from '@patternfly/react-core';
-import type { FormikProps } from 'formik';
-import type { AnyObjectSchema } from 'yup';
+import { type FormikProps, yupToFormErrors } from 'formik';
+import type { AnyObjectSchema, ValidationError } from 'yup';
 
 import { useTranslation } from '../../hooks/useTranslation';
 
@@ -38,7 +38,10 @@ export const CatalogItemWizardFooter = <TValues extends object>({
 
   const stepIndex = activeStep?.index ?? 1;
   const isFirst = stepIndex <= 1;
-  const isLast = stepIndex >= stepIds.length;
+  // Derived from stepIds, not activeStep.index: the PatternFly step index counts every WizardStep
+  // in the tree, so it would silently drift from stepIds.length if a non-stepIds step (e.g. a
+  // future review step) were ever added.
+  const isLast = stepIds.indexOf(activeStepId) >= stepIds.length - 1;
 
   const handleBack = () => {
     if (isFirst || isPending) {
@@ -63,15 +66,19 @@ export const CatalogItemWizardFooter = <TValues extends object>({
         return;
       }
       // The active step's own schema only covers its own fields — validate the full form here so a
-      // field cleared on a previously-visited earlier step can't slip through on final submit.
-      void fullFormSchema.isValid(formik.values).then((isFullFormValid) => {
-        if (!isFullFormValid) {
+      // field cleared on a previously-visited earlier step can't slip through on final submit. Use
+      // validate() rather than isValid() so a failure on an earlier step populates Formik's field
+      // errors instead of leaving the admin stuck on Create with no indication of what to fix.
+      void fullFormSchema
+        .validate(formik.values, { abortEarly: false })
+        .then(() => {
+          setValidationAlert(false);
+          void formik.submitForm();
+        })
+        .catch((err: ValidationError) => {
+          formik.setErrors(yupToFormErrors(err));
           setValidationAlert(true);
-          return;
-        }
-        setValidationAlert(false);
-        void formik.submitForm();
-      });
+        });
     });
   };
 

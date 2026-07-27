@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  IPV4_CIDR_PATTERN,
   buildCidrSchema,
   cidrsOverlap,
   hasSubnetOverlap,
@@ -24,6 +25,27 @@ describe('isValidCidr (ipv4)', () => {
     ['fd01::/48', false],
     ['fd02::/112', false],
   ])('validates %j as %s', (value, expected) => {
+    expect(isValidCidr(value, 'ipv4')).toBe(expected);
+  });
+});
+
+describe('IPV4_CIDR_PATTERN', () => {
+  // Every fixture here must agree with isValidCidr(value, 'ipv4') — this is the regression the
+  // wire-facing pattern and the admin-side Address4 parser must never diverge on again (the
+  // pattern used to accept leading-zero octets like "010.0.0.0/8" that Address4 rejects).
+  const pattern = new RegExp(IPV4_CIDR_PATTERN);
+
+  it.each([
+    ['10.128.0.0/14', true],
+    ['0.0.0.0/0', true],
+    ['255.255.255.255/32', true],
+    ['010.0.0.0/8', false],
+    ['192.168.01.1/24', false],
+    ['999.999.999.999/99', false],
+    ['256.0.0.0/8', false],
+    ['10.0.0.0/33', false],
+  ])('matches %j as %s, agreeing with isValidCidr', (value, expected) => {
+    expect(pattern.test(value)).toBe(expected);
     expect(isValidCidr(value, 'ipv4')).toBe(expected);
   });
 });

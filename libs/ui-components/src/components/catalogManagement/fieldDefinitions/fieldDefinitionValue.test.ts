@@ -106,3 +106,50 @@ describe('fieldDefinitionValueSchema with a format test', () => {
     );
   });
 });
+
+describe('fieldDefinitionValueSchema validation metadata', () => {
+  const schema = fieldDefinitionValueSchema(tIdentity);
+
+  it('rejects a malformed regex pattern', async () => {
+    await expect(
+      schema.validate({ editable: true, default: '', validation: { pattern: '[unterminated' } }),
+    ).rejects.toThrow('Must be a valid regular expression');
+  });
+
+  it('accepts a well-formed regex pattern', async () => {
+    await expect(
+      schema.validate({ editable: true, default: '', validation: { pattern: '^[a-z]+$' } }),
+    ).resolves.toMatchObject({ validation: { pattern: '^[a-z]+$' } });
+  });
+
+  it('rejects a non-numeric minimum', async () => {
+    await expect(
+      schema.validate({ editable: true, default: '', validation: { minimum: 'not-a-number' } }),
+    ).rejects.toThrow('Must be a number');
+  });
+
+  it('rejects a non-numeric maximum', async () => {
+    await expect(
+      schema.validate({ editable: true, default: '', validation: { maximum: 'not-a-number' } }),
+    ).rejects.toThrow('Must be a number');
+  });
+
+  it('rejects a maximum lower than the minimum', async () => {
+    await expect(
+      schema.validate({ editable: true, default: '', validation: { minimum: '10', maximum: '5' } }),
+    ).rejects.toThrow('Maximum must be greater than or equal to minimum');
+  });
+
+  it('accepts a maximum equal to the minimum', async () => {
+    await expect(
+      schema.validate({ editable: true, default: '', validation: { minimum: '5', maximum: '5' } }),
+    ).resolves.toMatchObject({ validation: { minimum: '5', maximum: '5' } });
+  });
+
+  it('accepts omitted validation metadata', async () => {
+    await expect(schema.validate({ editable: true, default: '' })).resolves.toMatchObject({
+      editable: true,
+      default: '',
+    });
+  });
+});

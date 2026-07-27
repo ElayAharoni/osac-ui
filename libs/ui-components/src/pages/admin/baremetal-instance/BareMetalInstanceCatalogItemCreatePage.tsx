@@ -88,7 +88,10 @@ const getStepValidationSchema = (stepId: BareMetalStepId, t: TFunction) => {
       return Yup.object({ title: Yup.string().required(t('Name is required')) });
     case 'configuration':
       return Yup.object({
-        fieldDefinitions: Yup.object({ run_strategy: fieldDefinitionValueSchema(t) }),
+        fieldDefinitions: Yup.object({
+          run_strategy: fieldDefinitionValueSchema(t),
+          user_data: fieldDefinitionValueSchema(t),
+        }),
       });
     case 'access':
       return Yup.object({
@@ -103,6 +106,7 @@ const getFullFormValidationSchema = (t: TFunction) =>
     title: Yup.string().required(t('Name is required')),
     fieldDefinitions: Yup.object({
       run_strategy: fieldDefinitionValueSchema(t),
+      user_data: fieldDefinitionValueSchema(t),
       ssh_public_key: fieldDefinitionValueSchema(t),
     }),
   });

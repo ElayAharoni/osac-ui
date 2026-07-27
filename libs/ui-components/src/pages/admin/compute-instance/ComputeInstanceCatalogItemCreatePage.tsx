@@ -111,6 +111,7 @@ const getStepValidationSchema = (stepId: VmStepId, t: TFunction) => {
           cores: fieldDefinitionValueSchema(t),
           memory_gib: fieldDefinitionValueSchema(t),
           boot_disk: Yup.object({ size_gib: fieldDefinitionValueSchema(t) }),
+          additional_disks: Yup.array().of(Yup.object({ size_gib: fieldDefinitionValueSchema(t) })),
         }),
       });
     case 'access':
@@ -127,6 +128,7 @@ const getFullFormValidationSchema = (t: TFunction) =>
     fieldDefinitions: Yup.object({
       cores: fieldDefinitionValueSchema(t),
       memory_gib: fieldDefinitionValueSchema(t),
+      additional_disks: Yup.array().of(Yup.object({ size_gib: fieldDefinitionValueSchema(t) })),
       boot_disk: Yup.object({ size_gib: fieldDefinitionValueSchema(t) }),
       ssh_key: fieldDefinitionValueSchema(t),
     }),

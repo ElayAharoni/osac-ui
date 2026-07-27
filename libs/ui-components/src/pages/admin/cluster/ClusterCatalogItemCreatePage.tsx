@@ -48,7 +48,7 @@ import {
 import { useSession } from '../../../hooks/use-session';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { getErrorMessage } from '../../../utils/error';
-import { isValidCidr } from '../../../validation/cidr-validation';
+import { IPV4_CIDR_PATTERN, isValidCidr } from '../../../validation/cidr-validation';
 
 const STEP_IDS = ['general', 'configuration', 'networking', 'access'] as const;
 type ClusterStepId = (typeof STEP_IDS)[number];
@@ -77,10 +77,6 @@ interface ClusterCatalogItemFormValues {
   };
 }
 
-// Octet-range-aware (0-255) and prefix-range-aware (0-32) IPv4 CIDR pattern for the wire
-// validationSchema — a loose digit-count-only pattern would accept "999.999.999.999/99".
-const CIDR_PATTERN =
-  '^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}/([0-9]|[12][0-9]|3[0-2])$';
 const SSH_PUBLIC_KEY_PATTERN =
   '^(ssh-rsa|ecdsa-sha2-nistp(256|384|521)|ssh-ed25519) AAAA[0-9A-Za-z+/]+[=]{0,3}( .*)?$';
 
@@ -99,8 +95,8 @@ const createInitialValues = (
       allowAddRemove: true,
     },
     network: {
-      pod_cidr: { editable: true, default: '', validation: { pattern: CIDR_PATTERN } },
-      service_cidr: { editable: true, default: '', validation: { pattern: CIDR_PATTERN } },
+      pod_cidr: { editable: true, default: '', validation: { pattern: IPV4_CIDR_PATTERN } },
+      service_cidr: { editable: true, default: '', validation: { pattern: IPV4_CIDR_PATTERN } },
     },
     ssh_public_key: {
       editable: true,

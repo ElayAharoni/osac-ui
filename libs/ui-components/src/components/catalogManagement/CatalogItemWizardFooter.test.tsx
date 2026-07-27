@@ -69,6 +69,9 @@ const TestWizard = ({
         <WizardStep id="access" name="Access">
           {validationAlert ? <div>Validation error</div> : null}
           <TextField name="ssh" label="SSH" />
+          {formik.errors.title ? (
+            <output aria-label="title-error">{formik.errors.title}</output>
+          ) : null}
         </WizardStep>
       </Wizard>
     </FormikProvider>
@@ -117,6 +120,22 @@ describe('CatalogItemWizardFooter', () => {
 
     expect(await screen.findByText('Validation error')).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('populates Formik field errors for the offending earlier step on a full-form failure', async () => {
+    const onSubmit = vi.fn();
+    const { user } = renderWithProviders(
+      <TestWizard initialValues={{ title: 'My item', ssh: '' }} onSubmit={onSubmit} />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    await user.clear(screen.getByRole('textbox', { name: 'Title' }));
+    await user.click(screen.getByRole('button', { name: 'Access' }));
+    await user.type(screen.getByRole('textbox', { name: 'SSH' }), 'valid-key');
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+
+    expect(await screen.findByLabelText('title-error')).toHaveTextContent('Name is required');
   });
 
   it('submits when the full form is valid on the final step', async () => {
