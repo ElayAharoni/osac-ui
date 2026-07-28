@@ -13,6 +13,7 @@ import {
 } from '@osac/types';
 
 import { useApiFetch } from '../api-context';
+import { escapeCelStringLiteral } from '../cel';
 import { type ListParams, apiQueryKey } from '../types';
 import { type ApiQueryClient, useApiQuery, useApiQueryClient } from '../use-api-query';
 
@@ -89,9 +90,6 @@ const combineListFilters = (...parts: string[]): string => {
   }
   return parts.map((part) => `(${part})`).join(' && ');
 };
-
-export const escapeCelStringLiteral = (value: string): string =>
-  value.replaceAll('\\', '\\\\').replaceAll('"', '\\"');
 
 const virtualNetworkScopeFilter = (virtualNetworkId: string): string =>
   `this.spec.virtual_network == "${escapeCelStringLiteral(virtualNetworkId)}"`;

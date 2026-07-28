@@ -5,7 +5,6 @@ import { SecurityGroupState, SubnetState, VirtualNetworkState } from '@osac/type
 
 import {
   VIRTUAL_NETWORK_READY_LIST_FILTER,
-  escapeCelStringLiteral,
   invalidateSecurityGroupsQueries,
   invalidateSubnetsQueries,
   invalidateVirtualNetworksQueries,
@@ -19,14 +18,6 @@ describe('networking list filters', () => {
     expect(VIRTUAL_NETWORK_READY_LIST_FILTER).toBe(
       `this.status.state == ${VirtualNetworkState.READY}`,
     );
-  });
-
-  it('escapes embedded quotes for CEL string literals', () => {
-    expect(escapeCelStringLiteral('say "hello"')).toBe('say \\"hello\\"');
-  });
-
-  it('escapes backslashes for CEL string literals', () => {
-    expect(escapeCelStringLiteral('path\\to\\thing')).toBe('path\\\\to\\\\thing');
   });
 
   it('combines virtual network scope and ready state for subnets', () => {
