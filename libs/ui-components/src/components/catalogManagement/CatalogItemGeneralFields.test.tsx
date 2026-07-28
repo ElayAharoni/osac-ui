@@ -19,9 +19,9 @@ const mockLists = () => {
     asQueryResult([{ id: 'acme', metadata: { name: 'Acme' } }]),
   );
   vi.mocked(projectsApi.useProjects).mockReturnValue(
-    asQueryResult([{ id: 'proj-1', metadata: { name: 'Project One' } }]) as unknown as ReturnType<
-      typeof projectsApi.useProjects
-    >,
+    asQueryResult([
+      { id: 'proj-1', metadata: { name: 'proj-1' }, spec: { title: 'Project One' } },
+    ]) as unknown as ReturnType<typeof projectsApi.useProjects>,
   );
 };
 
@@ -82,11 +82,11 @@ describe('CatalogItemGeneralFields', () => {
     mockLists();
     const { user } = renderFields('providerAdmin');
 
-    expect(screen.queryByLabelText('Select organization')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Select organization/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('radio', { name: 'Organization' }));
 
-    expect(screen.getByLabelText('Select organization')).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Select organization/)).toBeInTheDocument();
   });
 
   it('shows Organization/Project scope options for a Tenant Admin', () => {
@@ -102,10 +102,35 @@ describe('CatalogItemGeneralFields', () => {
     mockLists();
     const { user } = renderFields('tenantAdmin');
 
-    expect(screen.queryByLabelText('Select project')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Select project/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('radio', { name: 'Project' }));
 
-    expect(screen.getByLabelText('Select project')).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Select project/)).toBeInTheDocument();
+  });
+
+  it('shows the project title, not its id, in the project selector options', async () => {
+    mockLists();
+    const { user } = renderFields('tenantAdmin');
+
+    await user.click(screen.getByRole('radio', { name: 'Project' }));
+    await user.click(screen.getByLabelText(/^Select project/));
+
+    expect(screen.getByRole('option', { name: 'Project One' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'proj-1' })).not.toBeInTheDocument();
+  });
+
+  it('does not call the private Tenants API for a Tenant Admin', () => {
+    mockLists();
+    renderFields('tenantAdmin');
+
+    expect(tenantApi.useTenants).toHaveBeenCalledWith(false);
+  });
+
+  it('calls the private Tenants API for a CSP Admin', () => {
+    mockLists();
+    renderFields('providerAdmin');
+
+    expect(tenantApi.useTenants).toHaveBeenCalledWith(true);
   });
 });

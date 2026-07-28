@@ -109,6 +109,18 @@ describe('ClusterCatalogItemCreatePage', () => {
     expect(screen.getAllByText('General').length).toBeGreaterThan(0);
   });
 
+  it('blocks advancing past General when Organization scope is selected without an organization', async () => {
+    mockSharedData();
+    const { user } = renderPage();
+
+    await user.type(screen.getByLabelText(/^Name/), 'My Cluster');
+    await selectTemplate(user);
+    await user.click(screen.getByRole('radio', { name: 'Organization' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
+  });
+
   it('scopes node sets to the selected template and blocks advancing until sizes are set', async () => {
     mockSharedData();
     const { user } = renderPage();

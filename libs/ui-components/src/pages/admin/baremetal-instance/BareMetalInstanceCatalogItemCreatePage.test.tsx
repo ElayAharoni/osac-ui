@@ -2,8 +2,11 @@ import { createRouterTransport } from '@connectrpc/connect';
 import { screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { BareMetalInstanceCatalogItems } from '@osac/types';
-import { BareMetalInstanceCatalogItems as PrivateBareMetalInstanceCatalogItems } from '@osac/types/private';
+import { BareMetalInstanceCatalogItems, BareMetalInstanceTemplates } from '@osac/types';
+import {
+  BareMetalInstanceCatalogItems as PrivateBareMetalInstanceCatalogItems,
+  BareMetalInstanceTemplates as PrivateBareMetalInstanceTemplates,
+} from '@osac/types/private';
 
 import { BareMetalInstanceCatalogItemCreatePage } from './BareMetalInstanceCatalogItemCreatePage';
 import * as projectsApi from '../../../api/v1/projects';
@@ -24,12 +27,21 @@ const mockSharedData = () => {
   );
 };
 
+const selectTemplate = async (user: ReturnType<typeof renderPage>['user']) => {
+  await user.click(screen.getByLabelText(/^Template/));
+  await user.click(screen.getByRole('option', { name: 'Template One' }));
+};
+
 const createFn = vi.fn(() => ({ object: { id: 'new-id', title: 'My Bare Metal' } }));
 
 const renderPage = () => {
   const transport = createRouterTransport((router) => {
     router.service(BareMetalInstanceCatalogItems, { create: createFn });
     router.service(PrivateBareMetalInstanceCatalogItems, { create: createFn });
+    router.service(BareMetalInstanceTemplates, { list: () => ({ items: [] }) });
+    router.service(PrivateBareMetalInstanceTemplates, {
+      list: () => ({ items: [{ id: 'tmpl-1', metadata: { name: 'Template One' } }] }),
+    });
   });
   return renderWithProviders(
     <SessionProvider role="providerAdmin" username="test-user">
@@ -54,12 +66,35 @@ describe('BareMetalInstanceCatalogItemCreatePage', () => {
     expect(screen.queryByText('Networking')).not.toBeInTheDocument();
   });
 
+  it('blocks advancing past General when no template is selected', async () => {
+    mockSharedData();
+    const { user } = renderPage();
+
+    await user.type(screen.getByLabelText(/^Name/), 'My Bare Metal');
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
+  });
+
+  it('blocks advancing past General when Organization scope is selected without an organization', async () => {
+    mockSharedData();
+    const { user } = renderPage();
+
+    await user.type(screen.getByLabelText(/^Name/), 'My Bare Metal');
+    await selectTemplate(user);
+    await user.click(screen.getByRole('radio', { name: 'Organization' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
+  });
+
   it('submits with published: false', async () => {
     mockSharedData();
     createFn.mockClear();
     const { user } = renderPage();
 
     await user.type(screen.getByLabelText(/^Name/), 'My Bare Metal');
+    await selectTemplate(user);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.click(screen.getByRole('button', { name: 'Create' }));

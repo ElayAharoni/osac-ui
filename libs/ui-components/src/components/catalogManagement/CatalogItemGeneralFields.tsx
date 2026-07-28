@@ -5,6 +5,7 @@ import { useTenants } from '../../api/v1/tenant';
 import { useSession } from '../../hooks/use-session';
 import { useTranslation } from '../../hooks/useTranslation';
 import { InputField } from '../Form/InputField';
+import OsacForm from '../Form/OsacForm';
 import { RadioButtonField } from '../Form/RadioButtonField';
 import { SelectField, type SelectFieldOption } from '../Form/SelectField';
 
@@ -20,7 +21,9 @@ export const CatalogItemGeneralFields = ({
   const { t } = useTranslation();
   const { role } = useSession();
   const [scopeLevelField] = useField<string>('scope.level');
-  const { data: tenants = [] } = useTenants();
+  // Only a CSP Admin ever sees the organization dropdown below — a Tenant Admin has no permission
+  // to call the private Tenants API this hook uses, so it must stay disabled for that role.
+  const { data: tenants = [] } = useTenants(role === 'providerAdmin');
   const { data: projects = [] } = useProjects();
 
   const scopeOptions =
@@ -35,7 +38,7 @@ export const CatalogItemGeneralFields = ({
         ];
 
   return (
-    <>
+    <OsacForm>
       <InputField name="title" label={t('Name')} fieldId="catalog-item-title" isRequired />
       <InputField
         name="description"
@@ -50,6 +53,7 @@ export const CatalogItemGeneralFields = ({
         options={templates}
         isLoading={templatesLoading}
         placeholder={t('Select a template')}
+        isRequired
       />
       <RadioButtonField
         name="scope.level"
@@ -68,20 +72,22 @@ export const CatalogItemGeneralFields = ({
             label: tenant.metadata?.name || tenant.id,
           }))}
           placeholder={t('Select an organization')}
+          isRequired
         />
       ) : null}
       {role !== 'providerAdmin' && scopeLevelField.value === 'project' ? (
         <SelectField
           name="scope.project"
           label={t('Select project')}
-          fieldId="catalog-item-scope-project"
+          fieldId="catalog-item-scope-project-select"
           options={projects.map((project) => ({
             value: project.id,
-            label: project.metadata?.name || project.id,
+            label: project.spec?.title || project.metadata?.name || project.id,
           }))}
           placeholder={t('Select a project')}
+          isRequired
         />
       ) : null}
-    </>
+    </OsacForm>
   );
 };

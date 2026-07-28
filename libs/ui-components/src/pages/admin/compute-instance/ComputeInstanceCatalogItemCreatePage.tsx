@@ -25,10 +25,12 @@ import { ComputeInstanceCatalogItemSchema } from '@osac/types';
 import { useCreateComputeInstanceCatalogItem } from '../../../api/v1/compute-instance-catalog-item';
 import { useAdminComputeInstanceTemplates } from '../../../api/v1/compute-instance-templates';
 import { CatalogItemGeneralFields } from '../../../components/catalogManagement/CatalogItemGeneralFields';
+import { templateRequiredSchema } from '../../../components/catalogManagement/catalogItemGeneralSchema';
 import {
   type ScopeValues,
   buildScopePayloadFields,
   initialScopeForRole,
+  scopeValidationSchema,
 } from '../../../components/catalogManagement/catalogItemScope';
 import { CatalogItemWizardFooter } from '../../../components/catalogManagement/CatalogItemWizardFooter';
 import {
@@ -101,10 +103,18 @@ const createInitialValues = (
   },
 });
 
-const getStepValidationSchema = (stepId: VmStepId, t: TFunction) => {
+const getStepValidationSchema = (
+  stepId: VmStepId,
+  t: TFunction,
+  role: ReturnType<typeof useSession>['role'],
+) => {
   switch (stepId) {
     case 'general':
-      return Yup.object({ title: Yup.string().required(t('Name is required')) });
+      return Yup.object({
+        title: Yup.string().required(t('Name is required')),
+        template: templateRequiredSchema(t),
+        scope: scopeValidationSchema(t, role),
+      });
     case 'configuration':
       return Yup.object({
         fieldDefinitions: Yup.object({
@@ -122,9 +132,11 @@ const getStepValidationSchema = (stepId: VmStepId, t: TFunction) => {
 };
 
 // Validated once, in full, before the final submit — see CatalogItemWizardFooter.
-const getFullFormValidationSchema = (t: TFunction) =>
+const getFullFormValidationSchema = (t: TFunction, role: ReturnType<typeof useSession>['role']) =>
   Yup.object({
     title: Yup.string().required(t('Name is required')),
+    template: templateRequiredSchema(t),
+    scope: scopeValidationSchema(t, role),
     fieldDefinitions: Yup.object({
       cores: fieldDefinitionValueSchema(t),
       memory_gib: fieldDefinitionValueSchema(t),
@@ -182,10 +194,10 @@ export const ComputeInstanceCatalogItemCreatePage = () => {
 
   const initialValues = useMemo(() => createInitialValues(role), [role]);
   const validationSchema = useMemo(
-    () => getStepValidationSchema(activeStepId, t),
-    [activeStepId, t],
+    () => getStepValidationSchema(activeStepId, t, role),
+    [activeStepId, t, role],
   );
-  const fullFormSchema = useMemo(() => getFullFormValidationSchema(t), [t]);
+  const fullFormSchema = useMemo(() => getFullFormValidationSchema(t, role), [t, role]);
 
   const formik = useFormik<ComputeInstanceCatalogItemFormValues>({
     initialValues,

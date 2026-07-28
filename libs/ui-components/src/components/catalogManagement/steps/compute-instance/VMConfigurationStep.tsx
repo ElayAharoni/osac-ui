@@ -5,6 +5,7 @@ import { useFormikContext } from 'formik';
 
 import { useInstanceTypes } from '../../../../api/v1/instance-types';
 import { useTranslation } from '../../../../hooks/useTranslation';
+import OsacForm from '../../../Form/OsacForm';
 import { formatInstanceTypeOptionLabel } from '../../../vm/utils';
 import { BooleanFieldDefinition } from '../../fieldDefinitions/BooleanFieldDefinition';
 import { NumberFieldDefinition } from '../../fieldDefinitions/NumberFieldDefinition';
@@ -82,7 +83,7 @@ export const VMConfigurationStep = () => {
   const { data: instanceTypes = [], isLoading: instanceTypesLoading } = useInstanceTypes();
 
   return (
-    <>
+    <OsacForm>
       <ResourceSelectorFieldDefinition
         path="instance_type"
         label={t('Instance Type')}
@@ -110,6 +111,6 @@ export const VMConfigurationStep = () => {
         multiline
       />
       <BooleanFieldDefinition path="is_windows" label={t('Is Windows')} fieldId="is-windows" />
-    </>
+    </OsacForm>
   );
 };

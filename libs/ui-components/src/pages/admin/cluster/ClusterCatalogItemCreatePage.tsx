@@ -25,10 +25,12 @@ import { ClusterCatalogItemSchema } from '@osac/types';
 import { useCreateClusterCatalogItem } from '../../../api/v1/cluster-catalog-item';
 import { useAdminClusterTemplates } from '../../../api/v1/cluster-templates';
 import { CatalogItemGeneralFields } from '../../../components/catalogManagement/CatalogItemGeneralFields';
+import { templateRequiredSchema } from '../../../components/catalogManagement/catalogItemGeneralSchema';
 import {
   type ScopeValues,
   buildScopePayloadFields,
   initialScopeForRole,
+  scopeValidationSchema,
 } from '../../../components/catalogManagement/catalogItemScope';
 import { CatalogItemWizardFooter } from '../../../components/catalogManagement/CatalogItemWizardFooter';
 import {
@@ -115,13 +117,6 @@ const cidrFormatTest = (t: TFunction) => ({
   test: (value: unknown) => typeof value === 'string' && isValidCidr(value, 'ipv4'),
 });
 
-const templateRequiredSchema = (t: TFunction) =>
-  Yup.object({ value: Yup.string().required() }).test(
-    'template-selected',
-    t('Template is required'),
-    (template) => Boolean(template?.value?.trim()),
-  );
-
 // Node sets are entirely determined by the selected cluster template — fulfillment-service rejects
 // any node set whose key or host type doesn't match the template (see
 // `PrivateClustersServer.validateNodeSets`). An admin can only provide a default `size` per
@@ -147,12 +142,14 @@ const getStepValidationSchema = (
   stepId: ClusterStepId,
   t: TFunction,
   templateNodeSetKeys: string[],
+  role: ReturnType<typeof useSession>['role'],
 ) => {
   switch (stepId) {
     case 'general':
       return Yup.object({
         title: Yup.string().required(t('Name is required')),
         template: templateRequiredSchema(t),
+        scope: scopeValidationSchema(t, role),
       });
     case 'configuration':
       return Yup.object({
@@ -183,10 +180,15 @@ const getStepValidationSchema = (
 // Validated once, in full, before the final submit — the active step's own schema (above) only
 // covers its own fields, which would let a field cleared on an earlier, already-visited step
 // through undetected (see CatalogItemWizardFooter).
-const getFullFormValidationSchema = (t: TFunction, templateNodeSetKeys: string[]) =>
+const getFullFormValidationSchema = (
+  t: TFunction,
+  templateNodeSetKeys: string[],
+  role: ReturnType<typeof useSession>['role'],
+) =>
   Yup.object({
     title: Yup.string().required(t('Name is required')),
     template: templateRequiredSchema(t),
+    scope: scopeValidationSchema(t, role),
     fieldDefinitions: Yup.object({
       release_image: fieldDefinitionValueSchema(t),
       node_sets: nodeSetsSchema(t, templateNodeSetKeys),
@@ -296,12 +298,12 @@ export const ClusterCatalogItemCreatePage = () => {
 
   const initialValues = useMemo(() => createInitialValues(role), [role]);
   const validationSchema = useMemo(
-    () => getStepValidationSchema(activeStepId, t, templateNodeSetKeys),
-    [activeStepId, t, templateNodeSetKeys],
+    () => getStepValidationSchema(activeStepId, t, templateNodeSetKeys, role),
+    [activeStepId, t, templateNodeSetKeys, role],
   );
   const fullFormSchema = useMemo(
-    () => getFullFormValidationSchema(t, templateNodeSetKeys),
-    [t, templateNodeSetKeys],
+    () => getFullFormValidationSchema(t, templateNodeSetKeys, role),
+    [t, templateNodeSetKeys, role],
   );
 
   const formik = useFormik<ClusterCatalogItemFormValues>({

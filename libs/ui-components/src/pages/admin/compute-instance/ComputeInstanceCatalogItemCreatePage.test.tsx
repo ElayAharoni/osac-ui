@@ -2,8 +2,11 @@ import { createRouterTransport } from '@connectrpc/connect';
 import { screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ComputeInstanceCatalogItems } from '@osac/types';
-import { ComputeInstanceCatalogItems as PrivateComputeInstanceCatalogItems } from '@osac/types/private';
+import { ComputeInstanceCatalogItems, ComputeInstanceTemplates } from '@osac/types';
+import {
+  ComputeInstanceCatalogItems as PrivateComputeInstanceCatalogItems,
+  ComputeInstanceTemplates as PrivateComputeInstanceTemplates,
+} from '@osac/types/private';
 
 import { ComputeInstanceCatalogItemCreatePage } from './ComputeInstanceCatalogItemCreatePage';
 import * as instanceTypesApi from '../../../api/v1/instance-types';
@@ -35,12 +38,21 @@ const mockSharedData = (
   );
 };
 
+const selectTemplate = async (user: ReturnType<typeof renderPage>['user']) => {
+  await user.click(screen.getByLabelText(/^Template/));
+  await user.click(screen.getByRole('option', { name: 'Template One' }));
+};
+
 const createFn = vi.fn(() => ({ object: { id: 'new-id', title: 'My VM' } }));
 
 const renderPage = () => {
   const transport = createRouterTransport((router) => {
     router.service(ComputeInstanceCatalogItems, { create: createFn });
     router.service(PrivateComputeInstanceCatalogItems, { create: createFn });
+    router.service(ComputeInstanceTemplates, { list: () => ({ items: [] }) });
+    router.service(PrivateComputeInstanceTemplates, {
+      list: () => ({ items: [{ id: 'tmpl-1', metadata: { name: 'Template One' } }] }),
+    });
   });
   return renderWithProviders(
     <SessionProvider role="providerAdmin" username="test-user">
@@ -65,12 +77,35 @@ describe('ComputeInstanceCatalogItemCreatePage', () => {
     expect(screen.queryByText('Networking')).not.toBeInTheDocument();
   });
 
+  it('blocks advancing past General when no template is selected', async () => {
+    mockSharedData();
+    const { user } = renderPage();
+
+    await user.type(screen.getByLabelText(/^Name/), 'My VM');
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
+  });
+
+  it('blocks advancing past General when Organization scope is selected without an organization', async () => {
+    mockSharedData();
+    const { user } = renderPage();
+
+    await user.type(screen.getByLabelText(/^Name/), 'My VM');
+    await selectTemplate(user);
+    await user.click(screen.getByRole('radio', { name: 'Organization' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
+  });
+
   it('submits with published: false and auto-includes network_attachments', async () => {
     mockSharedData();
     createFn.mockClear();
     const { user } = renderPage();
 
     await user.type(screen.getByLabelText(/^Name/), 'My VM');
+    await selectTemplate(user);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.click(screen.getByRole('button', { name: 'Create' }));
@@ -96,6 +131,7 @@ describe('ComputeInstanceCatalogItemCreatePage', () => {
     const { user } = renderPage();
 
     await user.type(screen.getByLabelText(/^Name/), 'My VM');
+    await selectTemplate(user);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.click(screen.getByRole('button', { name: 'Default value' }));
     await user.click(screen.getByRole('option', { name: /Small/ }));

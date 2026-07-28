@@ -2,6 +2,7 @@ import { useFormikContext } from 'formik';
 
 import { useTranslation } from '../../../../hooks/useTranslation';
 import type { LabeledResourceRef } from '../../../Form/labeledResourceRef';
+import OsacForm from '../../../Form/OsacForm';
 import {
   NodeSetsFieldEditor,
   type NodeSetsTemplateLike,
@@ -22,13 +23,13 @@ export const ClusterConfigurationStep = ({ templates }: ClusterConfigurationStep
   const selectedTemplate = templates.find((template) => template.id === values.template.value);
 
   return (
-    <>
+    <OsacForm>
       <StringFieldDefinition
         path="release_image"
         label={t('Release Image')}
         fieldId="release-image"
       />
       <NodeSetsFieldEditor template={selectedTemplate} />
-    </>
+    </OsacForm>
   );
 };

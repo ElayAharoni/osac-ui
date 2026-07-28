@@ -1,4 +1,4 @@
-import { FormGroup, Radio } from '@patternfly/react-core';
+import { Flex, FlexItem, FormGroup, Radio } from '@patternfly/react-core';
 import { useField } from 'formik';
 
 import { getVisibleFieldError } from './fieldError';
@@ -43,22 +43,25 @@ export const RadioButtonField = ({
       role="radiogroup"
       isInline={isInline}
     >
-      {options.map((option) => (
-        <Radio
-          key={option.value}
-          id={`${fieldId}-${option.value}`}
-          name={name}
-          label={option.label}
-          isChecked={stringValue === option.value}
-          isDisabled={isDisabled}
-          onChange={() => {
-            const parsed =
-              option.value === 'true' ? true : option.value === 'false' ? false : option.value;
-            void field.onChange({ target: { name, value: parsed } });
-          }}
-          onBlur={field.onBlur}
-        />
-      ))}
+      <Flex direction={{ default: isInline ? 'row' : 'column' }} gap={{ default: 'gapMd' }}>
+        {options.map((option) => (
+          <FlexItem key={option.value}>
+            <Radio
+              id={`${fieldId}-${option.value}`}
+              name={name}
+              label={option.label}
+              isChecked={stringValue === option.value}
+              isDisabled={isDisabled}
+              onChange={() => {
+                const parsed =
+                  option.value === 'true' ? true : option.value === 'false' ? false : option.value;
+                void field.onChange({ target: { name, value: parsed } });
+              }}
+              onBlur={field.onBlur}
+            />
+          </FlexItem>
+        ))}
+      </Flex>
       <FormFieldHelper error={error} fieldId={fieldId} />
     </FormGroup>
   );
