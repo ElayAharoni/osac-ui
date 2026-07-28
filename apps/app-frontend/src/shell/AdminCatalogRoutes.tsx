@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 
-import CatalogManagementListPage from '@osac/ui-components/pages/admin/CatalogManagementListPage';
 import BareMetalInstanceCatalogItemCreatePage from '@osac/ui-components/pages/admin/baremetal-instance/BareMetalInstanceCatalogItemCreatePage';
+import CatalogManagementListPage from '@osac/ui-components/pages/admin/CatalogManagementListPage';
 import ClusterCatalogItemCreatePage from '@osac/ui-components/pages/admin/cluster/ClusterCatalogItemCreatePage';
 import ComputeInstanceCatalogItemCreatePage from '@osac/ui-components/pages/admin/compute-instance/ComputeInstanceCatalogItemCreatePage';
 

@@ -18,9 +18,9 @@ import {
   useCreateBareMetalInstanceCatalogItem,
   usePatchBareMetalInstance,
 } from './baremetal-instance';
+import { createCatalogHookTests } from '../../test-utils/catalogHookTestHelpers';
 import { renderHookWithTransport as renderWithTransport } from '../../test-utils/renderHookWithTransport';
 import { ApiProvider } from '../api-context';
-import { createCatalogHookTests } from '../../test-utils/catalogHookTestHelpers';
 
 const item: BareMetalInstanceCatalogItem = {
   $typeName: 'osac.public.v1.BareMetalInstanceCatalogItem',
