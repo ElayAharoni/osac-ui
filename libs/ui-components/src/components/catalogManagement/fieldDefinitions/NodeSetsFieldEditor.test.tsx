@@ -100,7 +100,7 @@ describe('NodeSetsFieldEditor', () => {
       twoNodeSetTemplate,
     );
 
-    const sizeInputs = screen.getAllByLabelText('Nodes');
+    const sizeInputs = screen.getAllByLabelText(/^Nodes \(/);
     await user.type(sizeInputs[0], '3');
 
     expect(sizeInputs[0]).toHaveValue(3);

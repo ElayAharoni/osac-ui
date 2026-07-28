@@ -7,10 +7,14 @@ import { wellKnownTypeRegistry } from './wellKnownTypeRegistry';
 describe('wellKnownTypeRegistry', () => {
   it.each([
     ['google.protobuf.BoolValue', true],
+    ['google.protobuf.BytesValue', 'AQI='],
     ['google.protobuf.StringValue', 'hello'],
     ['google.protobuf.Int32Value', 42],
     ['google.protobuf.Int64Value', '42'],
+    ['google.protobuf.UInt32Value', 42],
+    ['google.protobuf.UInt64Value', '42'],
     ['google.protobuf.DoubleValue', 4.2],
+    ['google.protobuf.FloatValue', 4.2],
     ['google.protobuf.Value', { nested: true }],
     ['google.protobuf.Struct', { nested: true }],
     ['google.protobuf.ListValue', [1, 2, 3]],

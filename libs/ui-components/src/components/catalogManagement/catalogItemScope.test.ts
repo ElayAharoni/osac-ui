@@ -19,10 +19,10 @@ describe('buildScopePayloadFields', () => {
       tenant: { value: 'acme', label: 'Acme' },
       project: { value: '', label: '' },
     };
-    const result = buildScopePayloadFields(scope, 'providerAdmin', 'My Cluster');
+    const result = buildScopePayloadFields(scope, 'providerAdmin', 'my-cluster');
 
     expect(result.tenant).toBe('acme');
-    expect(result.metadata.name).toContain('my-cluster');
+    expect(result.metadata.name).toBe('my-cluster');
   });
 
   it('sends an empty tenant for a CSP Admin scoped to general', () => {
@@ -31,7 +31,7 @@ describe('buildScopePayloadFields', () => {
       tenant: { value: 'acme', label: 'Acme' },
       project: { value: '', label: '' },
     };
-    const result = buildScopePayloadFields(scope, 'providerAdmin', 'My Cluster');
+    const result = buildScopePayloadFields(scope, 'providerAdmin', 'my-cluster');
 
     expect(result.tenant).toBe('');
   });
@@ -42,10 +42,10 @@ describe('buildScopePayloadFields', () => {
       tenant: { value: '', label: '' },
       project: { value: 'proj-1', label: 'Project One' },
     };
-    const result = buildScopePayloadFields(scope, 'tenantAdmin', 'My Cluster');
+    const result = buildScopePayloadFields(scope, 'tenantAdmin', 'my-cluster');
 
     expect(result.metadata.project).toBe('proj-1');
-    expect(result.metadata.name).toContain('my-cluster');
+    expect(result.metadata.name).toBe('my-cluster');
   });
 
   it('sends an empty metadata.project for a Tenant Admin scoped to organization', () => {
@@ -54,7 +54,7 @@ describe('buildScopePayloadFields', () => {
       tenant: { value: '', label: '' },
       project: { value: 'proj-1', label: 'Project One' },
     };
-    const result = buildScopePayloadFields(scope, 'tenantAdmin', 'My Cluster');
+    const result = buildScopePayloadFields(scope, 'tenantAdmin', 'my-cluster');
 
     expect(result.metadata.project).toBe('');
   });

@@ -25,7 +25,10 @@ import { ComputeInstanceCatalogItemSchema } from '@osac/types';
 import { useCreateComputeInstanceCatalogItem } from '../../../api/v1/compute-instance-catalog-item';
 import { useAdminComputeInstanceTemplates } from '../../../api/v1/compute-instance-templates';
 import { CatalogItemGeneralFields } from '../../../components/catalogManagement/CatalogItemGeneralFields';
-import { templateRequiredSchema } from '../../../components/catalogManagement/catalogItemGeneralSchema';
+import {
+  resourceRefRequiredSchema,
+  templateRequiredSchema,
+} from '../../../components/catalogManagement/catalogItemGeneralSchema';
 import {
   type ScopeValues,
   buildScopePayloadFields,
@@ -40,6 +43,7 @@ import {
 } from '../../../components/catalogManagement/fieldDefinitions/fieldDefinitionValue';
 import { VMAccessStep } from '../../../components/catalogManagement/steps/compute-instance/VMAccessStep';
 import { VMConfigurationStep } from '../../../components/catalogManagement/steps/compute-instance/VMConfigurationStep';
+import { buildMetadataNameSchema } from '../../../components/catalogProvision/wizard/metadataNameSchema';
 import { FieldValidationProvider } from '../../../components/Form/FieldValidationContext';
 import {
   EMPTY_LABELED_RESOURCE_REF,
@@ -65,6 +69,7 @@ interface AdditionalDiskEntry {
 
 interface ComputeInstanceCatalogItemFormValues {
   title: string;
+  resourceName: string;
   description: string;
   template: LabeledResourceRef;
   scope: ScopeValues;
@@ -86,6 +91,7 @@ const createInitialValues = (
   role: ReturnType<typeof useSession>['role'],
 ): ComputeInstanceCatalogItemFormValues => ({
   title: '',
+  resourceName: '',
   description: '',
   template: EMPTY_LABELED_RESOURCE_REF,
   scope: initialScopeForRole(role),
@@ -103,6 +109,18 @@ const createInitialValues = (
   },
 });
 
+// instance_type's default is a LabeledResourceRef ({value, label}), not a scalar, so the generic
+// fieldDefinitionValueSchema's required-default check (which only tests for `!== ''`) would pass
+// trivially on an empty ref object. Require `.value` specifically, only when non-editable.
+const instanceTypeFieldDefinitionSchema = (t: TFunction) =>
+  Yup.object({
+    editable: Yup.boolean().required(),
+    default: Yup.object({ value: Yup.string() }).when('editable', {
+      is: false,
+      then: () => resourceRefRequiredSchema(t('Default value is required for non-editable fields')),
+    }),
+  });
+
 const getStepValidationSchema = (
   stepId: VmStepId,
   t: TFunction,
@@ -111,13 +129,15 @@ const getStepValidationSchema = (
   switch (stepId) {
     case 'general':
       return Yup.object({
-        title: Yup.string().required(t('Name is required')),
+        title: Yup.string().required(t('Display name is required')),
+        resourceName: buildMetadataNameSchema(t),
         template: templateRequiredSchema(t),
         scope: scopeValidationSchema(t, role),
       });
     case 'configuration':
       return Yup.object({
         fieldDefinitions: Yup.object({
+          instance_type: instanceTypeFieldDefinitionSchema(t),
           cores: fieldDefinitionValueSchema(t),
           memory_gib: fieldDefinitionValueSchema(t),
           boot_disk: Yup.object({ size_gib: fieldDefinitionValueSchema(t) }),
@@ -134,10 +154,12 @@ const getStepValidationSchema = (
 // Validated once, in full, before the final submit — see CatalogItemWizardFooter.
 const getFullFormValidationSchema = (t: TFunction, role: ReturnType<typeof useSession>['role']) =>
   Yup.object({
-    title: Yup.string().required(t('Name is required')),
+    title: Yup.string().required(t('Display name is required')),
+    resourceName: buildMetadataNameSchema(t),
     template: templateRequiredSchema(t),
     scope: scopeValidationSchema(t, role),
     fieldDefinitions: Yup.object({
+      instance_type: instanceTypeFieldDefinitionSchema(t),
       cores: fieldDefinitionValueSchema(t),
       memory_gib: fieldDefinitionValueSchema(t),
       additional_disks: Yup.array().of(Yup.object({ size_gib: fieldDefinitionValueSchema(t) })),
@@ -212,7 +234,7 @@ export const ComputeInstanceCatalogItemCreatePage = () => {
           description: values.description.trim(),
           template: values.template.value,
           published: false,
-          ...buildScopePayloadFields(values.scope, role, values.title),
+          ...buildScopePayloadFields(values.scope, role, values.resourceName),
           // buildFieldDefinition()'s `default` is a decoded google.protobuf.Value init shape;
           // MessageInitShape can't structurally verify it against the generated Value type, so
           // this one property needs a cast (see buildFieldDefinition in fieldDefinitionValue.ts).

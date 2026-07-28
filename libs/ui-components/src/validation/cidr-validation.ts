@@ -7,9 +7,11 @@ export type CidrIpFamily = 'ipv4' | 'ipv6';
 // Octet-range-aware (0-255, no leading zeros) and prefix-range-aware (0-32) IPv4 CIDR regex, kept
 // as the single source for any wire-facing `validationSchema` pattern so it can never drift from
 // isValidCidr()'s Address4 parser below (which rejects "999.999.999.999/99" as out of range and
-// "010.0.0.0/8" as a leading-zero octet).
+// "010.0.0.0/8" as a leading-zero octet). Tolerates surrounding whitespace to agree with
+// isValidCidr(), which trims before parsing — otherwise a value the admin's own wizard accepts
+// could still fail this pattern when shipped as a tenant-facing JSON-Schema `pattern` constraint.
 const IPV4_CIDR_OCTET = '(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])';
-export const IPV4_CIDR_PATTERN = `^${IPV4_CIDR_OCTET}(\\.${IPV4_CIDR_OCTET}){3}/([0-9]|[12][0-9]|3[0-2])$`;
+export const IPV4_CIDR_PATTERN = `^\\s*${IPV4_CIDR_OCTET}(\\.${IPV4_CIDR_OCTET}){3}/([0-9]|[12][0-9]|3[0-2])\\s*$`;
 
 /**
  * Returns true when value is empty or a valid CIDR for the requested IP family.

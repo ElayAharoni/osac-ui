@@ -45,6 +45,7 @@ import type {
 import { ClusterAccessStep } from '../../../components/catalogManagement/steps/cluster/ClusterAccessStep';
 import { ClusterConfigurationStep } from '../../../components/catalogManagement/steps/cluster/ClusterConfigurationStep';
 import { ClusterNetworkingStep } from '../../../components/catalogManagement/steps/cluster/ClusterNetworkingStep';
+import { buildMetadataNameSchema } from '../../../components/catalogProvision/wizard/metadataNameSchema';
 import { FieldValidationProvider } from '../../../components/Form/FieldValidationContext';
 import {
   EMPTY_LABELED_RESOURCE_REF,
@@ -67,6 +68,7 @@ const STEP_LABEL_KEYS: Record<ClusterStepId, string> = {
 
 interface ClusterCatalogItemFormValues {
   title: string;
+  resourceName: string;
   description: string;
   template: LabeledResourceRef;
   scope: ScopeValues;
@@ -89,6 +91,7 @@ const createInitialValues = (
   role: ReturnType<typeof useSession>['role'],
 ): ClusterCatalogItemFormValues => ({
   title: '',
+  resourceName: '',
   description: '',
   template: EMPTY_LABELED_RESOURCE_REF,
   scope: initialScopeForRole(role),
@@ -136,6 +139,33 @@ const nodeSetsSchema = (t: TFunction, templateNodeSetKeys: string[]) =>
         ]),
       ),
     ),
+    sizeMin: Yup.string().test(
+      'numeric-size-min',
+      t('Must be a number'),
+      (value) => !value || Number.isFinite(Number(value)),
+    ),
+    sizeMax: Yup.string()
+      .test(
+        'numeric-size-max',
+        t('Must be a number'),
+        (value) => !value || Number.isFinite(Number(value)),
+      )
+      .test(
+        'size-max-not-less-than-min',
+        t('Maximum must be greater than or equal to minimum'),
+        function (value) {
+          const minimum = (this.parent as { sizeMin?: string }).sizeMin;
+          if (
+            !value ||
+            !minimum ||
+            !Number.isFinite(Number(value)) ||
+            !Number.isFinite(Number(minimum))
+          ) {
+            return true;
+          }
+          return Number(value) >= Number(minimum);
+        },
+      ),
   });
 
 const getStepValidationSchema = (
@@ -147,7 +177,8 @@ const getStepValidationSchema = (
   switch (stepId) {
     case 'general':
       return Yup.object({
-        title: Yup.string().required(t('Name is required')),
+        title: Yup.string().required(t('Display name is required')),
+        resourceName: buildMetadataNameSchema(t),
         template: templateRequiredSchema(t),
         scope: scopeValidationSchema(t, role),
       });
@@ -186,7 +217,8 @@ const getFullFormValidationSchema = (
   role: ReturnType<typeof useSession>['role'],
 ) =>
   Yup.object({
-    title: Yup.string().required(t('Name is required')),
+    title: Yup.string().required(t('Display name is required')),
+    resourceName: buildMetadataNameSchema(t),
     template: templateRequiredSchema(t),
     scope: scopeValidationSchema(t, role),
     fieldDefinitions: Yup.object({
@@ -320,7 +352,7 @@ export const ClusterCatalogItemCreatePage = () => {
           description: values.description.trim(),
           template: values.template.value,
           published: false,
-          ...buildScopePayloadFields(values.scope, role, values.title),
+          ...buildScopePayloadFields(values.scope, role, values.resourceName),
           // buildFieldDefinition()'s `default` is a decoded google.protobuf.Value init shape;
           // MessageInitShape can't structurally verify it against the generated Value type, so
           // this one property needs a cast (see buildFieldDefinition in fieldDefinitionValue.ts).

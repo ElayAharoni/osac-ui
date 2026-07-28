@@ -1,9 +1,11 @@
 import type { TFunction } from 'i18next';
 import * as Yup from 'yup';
 
-export const templateRequiredSchema = (t: TFunction) =>
-  Yup.object({ value: Yup.string().required() }).test(
-    'template-selected',
-    t('Template is required'),
-    (template) => Boolean(template?.value?.trim()),
+/** Requires a LabeledResourceRef (`{value, label}`) to have a non-empty `value`. */
+export const resourceRefRequiredSchema = (message: string) =>
+  Yup.object({ value: Yup.string().required() }).test('resource-ref-selected', message, (ref) =>
+    Boolean(ref?.value?.trim()),
   );
+
+export const templateRequiredSchema = (t: TFunction) =>
+  resourceRefRequiredSchema(t('Template is required'));

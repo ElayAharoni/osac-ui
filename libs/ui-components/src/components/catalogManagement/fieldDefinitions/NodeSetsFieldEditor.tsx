@@ -124,7 +124,7 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
               </Content>
               <InputField
                 name={`${NODE_SETS_NAME}.sizeByKey.${key}`}
-                label={t('Nodes')}
+                label={t('Nodes ({{key}})', { key })}
                 fieldId={`node-set-size-${key}`}
                 type="number"
               />

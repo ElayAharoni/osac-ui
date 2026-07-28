@@ -27,6 +27,7 @@ const mockLists = () => {
 
 interface Values {
   title: string;
+  resourceName: string;
   description: string;
   template: { value: string; label: string };
   scope: {
@@ -38,6 +39,7 @@ interface Values {
 
 const initialValues: Values = {
   title: '',
+  resourceName: '',
   description: '',
   template: { value: '', label: '' },
   scope: {
@@ -60,11 +62,12 @@ const renderFields = (role: 'providerAdmin' | 'tenantAdmin') =>
   );
 
 describe('CatalogItemGeneralFields', () => {
-  it('renders Name, Description, and Template fields', () => {
+  it('renders Display name, Resource name, Description, and Template fields', () => {
     mockLists();
     renderFields('providerAdmin');
 
-    expect(screen.getByLabelText(/^Name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Display name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Resource name/)).toBeInTheDocument();
     expect(screen.getByLabelText('Description')).toBeInTheDocument();
     expect(screen.getByLabelText(/^Template/)).toBeInTheDocument();
   });

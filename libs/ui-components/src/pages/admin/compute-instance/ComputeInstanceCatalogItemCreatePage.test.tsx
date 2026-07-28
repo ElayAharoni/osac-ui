@@ -43,6 +43,15 @@ const selectTemplate = async (user: ReturnType<typeof renderPage>['user']) => {
   await user.click(screen.getByRole('option', { name: 'Template One' }));
 };
 
+const fillNames = async (
+  user: ReturnType<typeof renderPage>['user'],
+  title: string,
+  resourceName: string,
+) => {
+  await user.type(screen.getByLabelText(/^Display name/), title);
+  await user.type(screen.getByLabelText(/^Resource name/), resourceName);
+};
+
 const createFn = vi.fn(() => ({ object: { id: 'new-id', title: 'My VM' } }));
 
 const renderPage = () => {
@@ -70,7 +79,8 @@ describe('ComputeInstanceCatalogItemCreatePage', () => {
     expect(
       screen.getByRole('heading', { name: 'Create virtual machine catalog item' }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Display name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Resource name/)).toBeInTheDocument();
     expect(screen.getAllByText('General').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Configuration').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Access').length).toBeGreaterThan(0);
@@ -81,7 +91,7 @@ describe('ComputeInstanceCatalogItemCreatePage', () => {
     mockSharedData();
     const { user } = renderPage();
 
-    await user.type(screen.getByLabelText(/^Name/), 'My VM');
+    await fillNames(user, 'My VM', 'my-vm');
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
     expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
@@ -91,7 +101,7 @@ describe('ComputeInstanceCatalogItemCreatePage', () => {
     mockSharedData();
     const { user } = renderPage();
 
-    await user.type(screen.getByLabelText(/^Name/), 'My VM');
+    await fillNames(user, 'My VM', 'my-vm');
     await selectTemplate(user);
     await user.click(screen.getByRole('radio', { name: 'Organization' }));
     await user.click(screen.getByRole('button', { name: 'Next' }));
@@ -104,7 +114,7 @@ describe('ComputeInstanceCatalogItemCreatePage', () => {
     createFn.mockClear();
     const { user } = renderPage();
 
-    await user.type(screen.getByLabelText(/^Name/), 'My VM');
+    await fillNames(user, 'My VM', 'my-vm');
     await selectTemplate(user);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.click(screen.getByRole('button', { name: 'Next' }));
@@ -130,7 +140,7 @@ describe('ComputeInstanceCatalogItemCreatePage', () => {
     createFn.mockClear();
     const { user } = renderPage();
 
-    await user.type(screen.getByLabelText(/^Name/), 'My VM');
+    await fillNames(user, 'My VM', 'my-vm');
     await selectTemplate(user);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.click(screen.getByRole('button', { name: 'Default value' }));

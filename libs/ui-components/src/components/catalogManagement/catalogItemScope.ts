@@ -2,7 +2,6 @@ import type { TFunction } from 'i18next';
 import * as Yup from 'yup';
 
 import type { DemoShellRole } from '../../shellTypes';
-import { slugifyUnique } from '../../utils/slug';
 import { EMPTY_LABELED_RESOURCE_REF, type LabeledResourceRef } from '../Form/labeledResourceRef';
 
 export interface ScopeValues {
@@ -49,19 +48,19 @@ export const scopeValidationSchema = (t: TFunction, role: DemoShellRole) =>
     ),
   });
 
-export const buildScopePayloadFields = (scope: ScopeValues, role: DemoShellRole, title: string) => {
-  // slugifyUnique(), not slugify(): near-identical titles ("My VM" / "My VM!") would otherwise
-  // collide on the same resource name and fail server-side with an opaque "already exists" error.
-  const name = slugifyUnique(title);
-  return role === 'providerAdmin'
+export const buildScopePayloadFields = (
+  scope: ScopeValues,
+  role: DemoShellRole,
+  resourceName: string,
+) =>
+  role === 'providerAdmin'
     ? {
         tenant: scope.level === 'organization' ? scope.tenant.value : '',
-        metadata: { name },
+        metadata: { name: resourceName },
       }
     : {
         metadata: {
-          name,
+          name: resourceName,
           project: scope.level === 'project' ? scope.project.value : '',
         },
       };
-};

@@ -43,8 +43,17 @@ const selectTemplate = async (user: ReturnType<typeof renderPage>['user']) => {
   await user.click(screen.getByRole('option', { name: 'Template One' }));
 };
 
+const fillNames = async (
+  user: ReturnType<typeof renderPage>['user'],
+  title: string,
+  resourceName: string,
+) => {
+  await user.type(screen.getByLabelText(/^Display name/), title);
+  await user.type(screen.getByLabelText(/^Resource name/), resourceName);
+};
+
 const fillFirstNodeSet = async (user: ReturnType<typeof renderPage>['user']) => {
-  await user.type(screen.getByLabelText('Nodes'), '3');
+  await user.type(screen.getByLabelText(/^Nodes \(/), '3');
 };
 
 const createFn = vi.fn(() => ({ object: { id: 'new-id', title: 'My Cluster' } }));
@@ -82,7 +91,8 @@ describe('ClusterCatalogItemCreatePage', () => {
     expect(
       screen.getByRole('heading', { name: 'Create cluster catalog item' }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Display name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Resource name/)).toBeInTheDocument();
     expect(screen.getAllByText('General').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Configuration').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Networking').length).toBeGreaterThan(0);
@@ -102,7 +112,7 @@ describe('ClusterCatalogItemCreatePage', () => {
     mockSharedData();
     const { user } = renderPage();
 
-    await user.type(screen.getByLabelText(/^Name/), 'My Cluster');
+    await fillNames(user, 'My Cluster', 'my-cluster');
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
     expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
@@ -113,7 +123,7 @@ describe('ClusterCatalogItemCreatePage', () => {
     mockSharedData();
     const { user } = renderPage();
 
-    await user.type(screen.getByLabelText(/^Name/), 'My Cluster');
+    await fillNames(user, 'My Cluster', 'my-cluster');
     await selectTemplate(user);
     await user.click(screen.getByRole('radio', { name: 'Organization' }));
     await user.click(screen.getByRole('button', { name: 'Next' }));
@@ -125,7 +135,7 @@ describe('ClusterCatalogItemCreatePage', () => {
     mockSharedData();
     const { user } = renderPage();
 
-    await user.type(screen.getByLabelText(/^Name/), 'My Cluster');
+    await fillNames(user, 'My Cluster', 'my-cluster');
     await selectTemplate(user);
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
@@ -144,7 +154,7 @@ describe('ClusterCatalogItemCreatePage', () => {
     createFn.mockClear();
     const { user } = renderPage();
 
-    await user.type(screen.getByLabelText(/^Name/), 'My Cluster');
+    await fillNames(user, 'My Cluster', 'my-cluster');
     await selectTemplate(user);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await fillFirstNodeSet(user);

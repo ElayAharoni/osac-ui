@@ -32,6 +32,15 @@ const selectTemplate = async (user: ReturnType<typeof renderPage>['user']) => {
   await user.click(screen.getByRole('option', { name: 'Template One' }));
 };
 
+const fillNames = async (
+  user: ReturnType<typeof renderPage>['user'],
+  title: string,
+  resourceName: string,
+) => {
+  await user.type(screen.getByLabelText(/^Display name/), title);
+  await user.type(screen.getByLabelText(/^Resource name/), resourceName);
+};
+
 const createFn = vi.fn(() => ({ object: { id: 'new-id', title: 'My Bare Metal' } }));
 
 const renderPage = () => {
@@ -59,7 +68,8 @@ describe('BareMetalInstanceCatalogItemCreatePage', () => {
     expect(
       screen.getByRole('heading', { name: 'Create bare metal catalog item' }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Display name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Resource name/)).toBeInTheDocument();
     expect(screen.getAllByText('General').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Configuration').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Access').length).toBeGreaterThan(0);
@@ -70,7 +80,7 @@ describe('BareMetalInstanceCatalogItemCreatePage', () => {
     mockSharedData();
     const { user } = renderPage();
 
-    await user.type(screen.getByLabelText(/^Name/), 'My Bare Metal');
+    await fillNames(user, 'My Bare Metal', 'my-bare-metal');
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
     expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
@@ -80,7 +90,7 @@ describe('BareMetalInstanceCatalogItemCreatePage', () => {
     mockSharedData();
     const { user } = renderPage();
 
-    await user.type(screen.getByLabelText(/^Name/), 'My Bare Metal');
+    await fillNames(user, 'My Bare Metal', 'my-bare-metal');
     await selectTemplate(user);
     await user.click(screen.getByRole('radio', { name: 'Organization' }));
     await user.click(screen.getByRole('button', { name: 'Next' }));
@@ -93,7 +103,7 @@ describe('BareMetalInstanceCatalogItemCreatePage', () => {
     createFn.mockClear();
     const { user } = renderPage();
 
-    await user.type(screen.getByLabelText(/^Name/), 'My Bare Metal');
+    await fillNames(user, 'My Bare Metal', 'my-bare-metal');
     await selectTemplate(user);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.click(screen.getByRole('button', { name: 'Next' }));

@@ -39,7 +39,14 @@ export const CatalogItemGeneralFields = ({
 
   return (
     <OsacForm>
-      <InputField name="title" label={t('Name')} fieldId="catalog-item-title" isRequired />
+      <InputField name="title" label={t('Display name')} fieldId="catalog-item-title" isRequired />
+      <InputField
+        name="resourceName"
+        label={t('Resource name')}
+        fieldId="catalog-item-resource-name"
+        isRequired
+        helperText={t('Name must be a valid DNS label (RFC 1035).')}
+      />
       <InputField
         name="description"
         label={t('Description')}

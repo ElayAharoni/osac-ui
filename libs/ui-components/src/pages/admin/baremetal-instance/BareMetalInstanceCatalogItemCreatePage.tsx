@@ -40,6 +40,7 @@ import {
 } from '../../../components/catalogManagement/fieldDefinitions/fieldDefinitionValue';
 import { BMAccessStep } from '../../../components/catalogManagement/steps/baremetal-instance/BMAccessStep';
 import { BMConfigurationStep } from '../../../components/catalogManagement/steps/baremetal-instance/BMConfigurationStep';
+import { buildMetadataNameSchema } from '../../../components/catalogProvision/wizard/metadataNameSchema';
 import { FieldValidationProvider } from '../../../components/Form/FieldValidationContext';
 import {
   EMPTY_LABELED_RESOURCE_REF,
@@ -60,6 +61,7 @@ const STEP_LABEL_KEYS: Record<BareMetalStepId, string> = {
 
 interface BareMetalInstanceCatalogItemFormValues {
   title: string;
+  resourceName: string;
   description: string;
   template: LabeledResourceRef;
   scope: ScopeValues;
@@ -74,6 +76,7 @@ const createInitialValues = (
   role: ReturnType<typeof useSession>['role'],
 ): BareMetalInstanceCatalogItemFormValues => ({
   title: '',
+  resourceName: '',
   description: '',
   template: EMPTY_LABELED_RESOURCE_REF,
   scope: initialScopeForRole(role),
@@ -92,7 +95,8 @@ const getStepValidationSchema = (
   switch (stepId) {
     case 'general':
       return Yup.object({
-        title: Yup.string().required(t('Name is required')),
+        title: Yup.string().required(t('Display name is required')),
+        resourceName: buildMetadataNameSchema(t),
         template: templateRequiredSchema(t),
         scope: scopeValidationSchema(t, role),
       });
@@ -113,7 +117,8 @@ const getStepValidationSchema = (
 // Validated once, in full, before the final submit — see CatalogItemWizardFooter.
 const getFullFormValidationSchema = (t: TFunction, role: ReturnType<typeof useSession>['role']) =>
   Yup.object({
-    title: Yup.string().required(t('Name is required')),
+    title: Yup.string().required(t('Display name is required')),
+    resourceName: buildMetadataNameSchema(t),
     template: templateRequiredSchema(t),
     scope: scopeValidationSchema(t, role),
     fieldDefinitions: Yup.object({
@@ -165,7 +170,7 @@ export const BareMetalInstanceCatalogItemCreatePage = () => {
           description: values.description.trim(),
           template: values.template.value,
           published: false,
-          ...buildScopePayloadFields(values.scope, role, values.title),
+          ...buildScopePayloadFields(values.scope, role, values.resourceName),
           // buildFieldDefinition()'s `default` is a decoded google.protobuf.Value init shape;
           // MessageInitShape can't structurally verify it against the generated Value type, so
           // this one property needs a cast (see buildFieldDefinition in fieldDefinitionValue.ts).
