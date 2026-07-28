@@ -8,10 +8,12 @@ import { ApiProvider, connectErrorInterceptor } from '@osac/ui-components/api/ap
 
 import App from './App';
 import './i18n';
+import { wellKnownTypeRegistry } from './wellKnownTypeRegistry';
 
 const connectTransport = createConnectTransport({
   baseUrl: '/api/fulfillment',
   interceptors: [connectErrorInterceptor],
+  jsonOptions: { registry: wellKnownTypeRegistry },
 });
 
 // CSS load order is intentional: base → addons → local overrides
