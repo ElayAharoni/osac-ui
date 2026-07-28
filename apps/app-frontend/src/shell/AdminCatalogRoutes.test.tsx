@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
@@ -20,10 +19,8 @@ vi.mock(
     default: () => <div>Bare metal create page</div>,
   }),
 );
-vi.mock('@osac/ui-components/components/Page/ListPage', () => ({
-  default: ({ children }: { children: ReactNode }) => (
-    <div>Catalog management list page{children}</div>
-  ),
+vi.mock('@osac/ui-components/pages/admin/CatalogManagementListPage', () => ({
+  default: () => <div>Catalog management list page</div>,
 }));
 vi.mock('@osac/ui-components/hooks/useTranslation', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
