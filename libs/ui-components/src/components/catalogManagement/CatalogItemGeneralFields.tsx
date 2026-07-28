@@ -82,7 +82,7 @@ export const CatalogItemGeneralFields = ({
           fieldId="catalog-item-scope-project-select"
           options={projects.map((project) => ({
             value: project.id,
-            label: project.spec?.title || project.metadata?.name || project.id,
+            label: project.metadata?.name || project.id,
           }))}
           placeholder={t('Select a project')}
           isRequired

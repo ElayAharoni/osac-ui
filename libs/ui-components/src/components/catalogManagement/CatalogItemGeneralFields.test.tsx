@@ -19,9 +19,9 @@ const mockLists = () => {
     asQueryResult([{ id: 'acme', metadata: { name: 'Acme' } }]),
   );
   vi.mocked(projectsApi.useProjects).mockReturnValue(
-    asQueryResult([
-      { id: 'proj-1', metadata: { name: 'proj-1' }, spec: { title: 'Project One' } },
-    ]) as unknown as ReturnType<typeof projectsApi.useProjects>,
+    asQueryResult([{ id: 'proj-1', metadata: { name: 'Project One' } }]) as unknown as ReturnType<
+      typeof projectsApi.useProjects
+    >,
   );
 };
 
@@ -109,7 +109,7 @@ describe('CatalogItemGeneralFields', () => {
     expect(screen.getByLabelText(/^Select project/)).toBeInTheDocument();
   });
 
-  it('shows the project title, not its id, in the project selector options', async () => {
+  it('shows the project display name, not its id, in the project selector options', async () => {
     mockLists();
     const { user } = renderFields('tenantAdmin');
 
