@@ -7,19 +7,17 @@ import { ComputeInstanceCatalogItems as PrivateComputeInstanceCatalogItems } fro
 
 import { ComputeInstanceCatalogItemCreatePage } from './ComputeInstanceCatalogItemCreatePage';
 import * as instanceTypesApi from '../../../api/v1/instance-types';
-import * as organizationApi from '../../../api/v1/organization';
 import * as projectsApi from '../../../api/v1/projects';
+import * as tenantApi from '../../../api/v1/tenant';
 import { SessionProvider } from '../../../hooks/use-session';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
 
 vi.mock('../../../api/v1/instance-types', () => ({ useInstanceTypes: vi.fn() }));
-vi.mock('../../../api/v1/organization', () => ({ useOrganizations: vi.fn() }));
+vi.mock('../../../api/v1/tenant', () => ({ useTenants: vi.fn() }));
 vi.mock('../../../api/v1/projects', () => ({ useProjects: vi.fn() }));
 
 const asQueryResult = <T,>(data: T) =>
-  ({ data, isLoading: false, error: null }) as unknown as ReturnType<
-    typeof organizationApi.useOrganizations
-  >;
+  ({ data, isLoading: false, error: null }) as unknown as ReturnType<typeof tenantApi.useTenants>;
 
 const mockSharedData = (
   instanceTypes: {
@@ -31,7 +29,7 @@ const mockSharedData = (
   vi.mocked(instanceTypesApi.useInstanceTypes).mockReturnValue(
     asQueryResult(instanceTypes) as unknown as ReturnType<typeof instanceTypesApi.useInstanceTypes>,
   );
-  vi.mocked(organizationApi.useOrganizations).mockReturnValue(asQueryResult([]));
+  vi.mocked(tenantApi.useTenants).mockReturnValue(asQueryResult([]));
   vi.mocked(projectsApi.useProjects).mockReturnValue(
     asQueryResult([]) as unknown as ReturnType<typeof projectsApi.useProjects>,
   );

@@ -10,8 +10,8 @@ import {
 
 import { ClusterCatalogItemCreatePage } from './ClusterCatalogItemCreatePage';
 import * as hostTypesApi from '../../../api/v1/host-types';
-import * as organizationApi from '../../../api/v1/organization';
 import * as projectsApi from '../../../api/v1/projects';
+import * as tenantApi from '../../../api/v1/tenant';
 import { SessionProvider } from '../../../hooks/use-session';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
 
@@ -19,13 +19,11 @@ vi.mock('../../../api/v1/host-types', () => ({
   useHostTypes: vi.fn(),
   hostTypeDisplayName: (hostType: { id: string; title?: string }) => hostType.title ?? hostType.id,
 }));
-vi.mock('../../../api/v1/organization', () => ({ useOrganizations: vi.fn() }));
+vi.mock('../../../api/v1/tenant', () => ({ useTenants: vi.fn() }));
 vi.mock('../../../api/v1/projects', () => ({ useProjects: vi.fn() }));
 
 const asQueryResult = <T,>(data: T) =>
-  ({ data, isLoading: false, error: null }) as unknown as ReturnType<
-    typeof organizationApi.useOrganizations
-  >;
+  ({ data, isLoading: false, error: null }) as unknown as ReturnType<typeof tenantApi.useTenants>;
 
 const mockSharedData = () => {
   vi.mocked(hostTypesApi.useHostTypes).mockReturnValue({
@@ -34,7 +32,7 @@ const mockSharedData = () => {
     error: null,
     refetch: vi.fn(),
   } as unknown as ReturnType<typeof hostTypesApi.useHostTypes>);
-  vi.mocked(organizationApi.useOrganizations).mockReturnValue(asQueryResult([]));
+  vi.mocked(tenantApi.useTenants).mockReturnValue(asQueryResult([]));
   vi.mocked(projectsApi.useProjects).mockReturnValue(
     asQueryResult([]) as unknown as ReturnType<typeof projectsApi.useProjects>,
   );

@@ -1,7 +1,7 @@
 import { useField } from 'formik';
 
-import { useOrganizations } from '../../api/v1/organization';
 import { useProjects } from '../../api/v1/projects';
+import { useTenants } from '../../api/v1/tenant';
 import { useSession } from '../../hooks/use-session';
 import { useTranslation } from '../../hooks/useTranslation';
 import { InputField } from '../Form/InputField';
@@ -20,7 +20,7 @@ export const CatalogItemGeneralFields = ({
   const { t } = useTranslation();
   const { role } = useSession();
   const [scopeLevelField] = useField<string>('scope.level');
-  const { data: organizations = [] } = useOrganizations();
+  const { data: tenants = [] } = useTenants();
   const { data: projects = [] } = useProjects();
 
   const scopeOptions =
@@ -63,9 +63,9 @@ export const CatalogItemGeneralFields = ({
           name="scope.tenant"
           label={t('Select organization')}
           fieldId="catalog-item-scope-tenant"
-          options={organizations.map((organization) => ({
-            value: organization.id,
-            label: organization.metadata?.name || organization.id,
+          options={tenants.map((tenant) => ({
+            value: tenant.id,
+            label: tenant.metadata?.name || tenant.id,
           }))}
           placeholder={t('Select an organization')}
         />

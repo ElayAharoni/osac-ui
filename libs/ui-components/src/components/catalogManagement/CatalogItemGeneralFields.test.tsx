@@ -3,21 +3,19 @@ import { Formik } from 'formik';
 import { describe, expect, it, vi } from 'vitest';
 
 import { CatalogItemGeneralFields } from './CatalogItemGeneralFields';
-import * as organizationApi from '../../api/v1/organization';
 import * as projectsApi from '../../api/v1/projects';
+import * as tenantApi from '../../api/v1/tenant';
 import { SessionProvider } from '../../hooks/use-session';
 import { renderWithProviders } from '../../test-utils/TestProviders';
 
-vi.mock('../../api/v1/organization', () => ({ useOrganizations: vi.fn() }));
+vi.mock('../../api/v1/tenant', () => ({ useTenants: vi.fn() }));
 vi.mock('../../api/v1/projects', () => ({ useProjects: vi.fn() }));
 
 const asQueryResult = <T,>(data: T) =>
-  ({ data, isLoading: false, error: null }) as unknown as ReturnType<
-    typeof organizationApi.useOrganizations
-  >;
+  ({ data, isLoading: false, error: null }) as unknown as ReturnType<typeof tenantApi.useTenants>;
 
 const mockLists = () => {
-  vi.mocked(organizationApi.useOrganizations).mockReturnValue(
+  vi.mocked(tenantApi.useTenants).mockReturnValue(
     asQueryResult([{ id: 'acme', metadata: { name: 'Acme' } }]),
   );
   vi.mocked(projectsApi.useProjects).mockReturnValue(

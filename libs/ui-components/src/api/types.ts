@@ -14,7 +14,6 @@ export type ApiRoute =
   | 'v1/host_types'
   | 'v1/instance_types'
   | 'v1/clusters'
-  | 'v1/organizations'
   | 'v1/users'
   | 'v1/capabilities'
   | 'v1/network_classes'
@@ -33,6 +32,7 @@ export type ApiRoute =
   | 'v1/compute_instance_templates_private'
   | 'v1/baremetal_instance_templates_private'
   | 'v1/projects'
+  | 'v1/tenants_private'
   | 'v1/console_sessions';
 
 /**
