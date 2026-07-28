@@ -1,3 +1,5 @@
+import type { TFunction } from 'i18next';
+
 import type {
   BareMetalInstanceCatalogItem,
   ClusterCatalogItem,
@@ -175,7 +177,10 @@ export const formatCatalogFieldDefault = (def: CatalogFieldDefinition): string =
   return fieldDefinitionDefaultToInputString(defaultValue) || '—';
 };
 
-export const formatCatalogFieldValidationSummary = (def: CatalogFieldDefinition): string => {
+export const formatCatalogFieldValidationSummary = (
+  def: CatalogFieldDefinition,
+  t: TFunction,
+): string => {
   const schema = def.validationSchema;
   if (!schema || !Object.keys(schema).length) {
     return '—';
@@ -187,25 +192,25 @@ export const formatCatalogFieldValidationSummary = (def: CatalogFieldDefinition)
     typeof schema.minimum !== 'number' &&
     typeof schema.maximum !== 'number'
   ) {
-    parts.push('whole number');
+    parts.push(t('whole number'));
   }
   if (typeof schema.minimum === 'number') {
-    parts.push(`min: ${schema.minimum}`);
+    parts.push(t('min: {{value}}', { value: schema.minimum }));
   }
   if (typeof schema.maximum === 'number') {
-    parts.push(`max: ${schema.maximum}`);
+    parts.push(t('max: {{value}}', { value: schema.maximum }));
   }
   if (typeof schema.minLength === 'number') {
-    parts.push(`min length: ${schema.minLength}`);
+    parts.push(t('min length: {{value}}', { value: schema.minLength }));
   }
   if (typeof schema.maxLength === 'number') {
-    parts.push(`max length: ${schema.maxLength}`);
+    parts.push(t('max length: {{value}}', { value: schema.maxLength }));
   }
   if (typeof schema.pattern === 'string' && schema.pattern) {
-    parts.push(`pattern: ${schema.pattern}`);
+    parts.push(t('pattern: {{value}}', { value: schema.pattern }));
   }
   if (Array.isArray(schema.enum) && schema.enum.length > 0) {
-    parts.push(`enum: [${schema.enum.map(String).join(', ')}]`);
+    parts.push(t('enum: [{{value}}]', { value: schema.enum.map(String).join(', ') }));
   }
 
   return parts.length > 0 ? parts.join(', ') : '—';

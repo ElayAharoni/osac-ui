@@ -44,7 +44,7 @@ const CatalogItemFieldDefinitionsTab = ({ catalogItem }: CatalogItemFieldDefinit
             <Td dataLabel={t('Editable')}>{def.editable ? t('Yes') : t('No')}</Td>
             <Td dataLabel={t('Default Value')}>{formatCatalogFieldDefault(def)}</Td>
             <Td dataLabel={t('Validation Constraints')}>
-              {formatCatalogFieldValidationSummary(def)}
+              {formatCatalogFieldValidationSummary(def, t)}
             </Td>
           </Tr>
         ))}

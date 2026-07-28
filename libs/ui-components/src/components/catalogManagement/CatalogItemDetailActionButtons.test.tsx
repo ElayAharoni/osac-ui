@@ -79,6 +79,7 @@ describe('CatalogItemDetailActionButtons', () => {
 
     expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+    expect(screen.getByRole('switch')).toBeInTheDocument();
   });
 
   it('renders all actions for tenantAdmin on a project-scoped item', () => {
