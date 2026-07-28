@@ -16,3 +16,17 @@ export const usePrivateBareMetalInstanceCatalogItems = (
     enabled,
   });
 };
+
+export const usePrivateBareMetalInstanceCatalogItem = (id: string | undefined) => {
+  const client = useApiFetch(BareMetalInstanceCatalogItems);
+  const trimmedId = id?.trim() ?? '';
+  return useApiQuery({
+    queryKey: apiQueryKey(
+      'v1/private/baremetal_instance_catalog_items',
+      trimmedId ? [trimmedId] : undefined,
+    ),
+    queryFn: () => client.get({ id: trimmedId }),
+    select: (data) => data.object,
+    enabled: Boolean(trimmedId),
+  });
+};

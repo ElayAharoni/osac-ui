@@ -13,6 +13,7 @@ import {
 
 import {
   type PatchBareMetalInstanceInput,
+  useBareMetalInstanceCatalogItem,
   useBareMetalInstanceCatalogItems,
   useBareMetalInstancesForCatalogItem,
   usePatchBareMetalInstance,
@@ -44,6 +45,44 @@ describe('useBareMetalInstanceCatalogItems', () => {
           return { items: [item] };
         },
       }),
+  });
+});
+
+describe('useBareMetalInstanceCatalogItem', () => {
+  const createTestTransport = (onGet?: (req: unknown) => void) =>
+    createRouterTransport((router) => {
+      router.service(BareMetalInstanceCatalogItems, {
+        get: (req) => {
+          onGet?.(req);
+          return { object: item };
+        },
+      });
+    });
+
+  it('fetches a single catalog item by id from the Get endpoint', async () => {
+    const transport = createTestTransport();
+    const { result } = renderHookWithProviders(() => useBareMetalInstanceCatalogItem('public-1'), {
+      role: 'tenantAdmin',
+      transport,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toMatchObject(item);
+  });
+
+  it('does not fetch when id is undefined', async () => {
+    let getCalled = false;
+    const transport = createTestTransport(() => {
+      getCalled = true;
+    });
+
+    renderHookWithProviders(() => useBareMetalInstanceCatalogItem(undefined), {
+      role: 'tenantAdmin',
+      transport,
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(getCalled).toBe(false);
   });
 });
 

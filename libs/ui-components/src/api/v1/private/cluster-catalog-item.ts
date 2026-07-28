@@ -13,3 +13,14 @@ export const usePrivateClusterCatalogItems = (params: ListParams = {}, enabled =
     enabled,
   });
 };
+
+export const usePrivateClusterCatalogItem = (id: string | undefined) => {
+  const client = useApiFetch(ClusterCatalogItems);
+  const trimmedId = id?.trim() ?? '';
+  return useApiQuery({
+    queryKey: apiQueryKey('v1/private/cluster_catalog_items', trimmedId ? [trimmedId] : undefined),
+    queryFn: () => client.get({ id: trimmedId }),
+    select: (data) => data.object,
+    enabled: Boolean(trimmedId),
+  });
+};

@@ -13,3 +13,17 @@ export const usePrivateComputeInstanceCatalogItems = (params: ListParams = {}, e
     enabled,
   });
 };
+
+export const usePrivateComputeInstanceCatalogItem = (id: string | undefined) => {
+  const client = useApiFetch(ComputeInstanceCatalogItems);
+  const trimmedId = id?.trim() ?? '';
+  return useApiQuery({
+    queryKey: apiQueryKey(
+      'v1/private/compute_instance_catalog_items',
+      trimmedId ? [trimmedId] : undefined,
+    ),
+    queryFn: () => client.get({ id: trimmedId }),
+    select: (data) => data.object,
+    enabled: Boolean(trimmedId),
+  });
+};
