@@ -10,6 +10,7 @@ import {
 } from '@osac/types';
 
 import { useApiFetch } from '../api-context';
+import { catalogItemProvisionedResourcesFilter } from '../cel';
 import { type ListParams, apiQueryKey } from '../types';
 import { buildUpdateMaskPaths } from './update-mask';
 import { type ApiQueryClient, useApiQuery, useApiQueryClient } from '../use-api-query';
@@ -20,6 +21,21 @@ export const useComputeInstances = (params: ListParams = {}) => {
     queryKey: apiQueryKey('v1/compute_instances', undefined, params),
     queryFn: () => client.list(params),
     select: (data) => data.items,
+  });
+};
+
+export const useComputeInstancesForCatalogItem = (
+  catalogItemId: string,
+  params: Pick<ListParams, 'limit' | 'offset'> = {},
+) => {
+  const client = useApiFetch(ComputeInstances);
+  const trimmedId = catalogItemId.trim();
+  const filter = catalogItemProvisionedResourcesFilter(trimmedId);
+  return useApiQuery({
+    queryKey: apiQueryKey('v1/compute_instances', undefined, { ...params, filter }),
+    queryFn: () => client.list({ ...params, filter }),
+    select: (data) => ({ items: data.items, total: data.total }),
+    enabled: Boolean(trimmedId),
   });
 };
 

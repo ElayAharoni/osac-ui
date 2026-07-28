@@ -6,7 +6,8 @@ import { describe, expect, it } from 'vitest';
 
 import { ComputeInstanceState, ComputeInstances } from '@osac/types';
 
-import { usePatchComputeInstance } from './compute-instance';
+import { useComputeInstancesForCatalogItem, usePatchComputeInstance } from './compute-instance';
+import { renderHookWithProviders } from '../../test-utils/TestProviders';
 import { ApiProvider } from '../api-context';
 
 const makeVm = (id: string, state: ComputeInstanceState) => ({
@@ -88,5 +89,85 @@ describe('usePatchComputeInstance', () => {
   it('resolves successfully after a stop action', async () => {
     const req = await mutateAndCapture('stop');
     expect(req).toBeDefined();
+  });
+});
+
+describe('useComputeInstancesForCatalogItem', () => {
+  const createTestTransport = (onList: (req: unknown) => void) =>
+    createRouterTransport((router) => {
+      router.service(ComputeInstances, {
+        list: (req) => {
+          onList(req);
+          return {
+            items: [makeVm('vm-1', ComputeInstanceState.RUNNING)],
+            total: 1,
+            size: 1,
+          };
+        },
+      });
+    });
+
+  it('filters by catalog item id and forwards pagination params', async () => {
+    let captured: Record<string, unknown> | undefined;
+    const transport = createTestTransport((req) => {
+      captured = req as Record<string, unknown>;
+    });
+
+    const { result } = renderHookWithProviders(
+      () => useComputeInstancesForCatalogItem('catalog-1', { limit: 10, offset: 20 }),
+      { role: 'providerAdmin', transport },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(captured).toMatchObject({
+      filter: 'this.spec.catalog_item == "catalog-1"',
+      limit: 10,
+      offset: 20,
+    });
+  });
+
+  it('returns items and total from the list response', async () => {
+    const transport = createTestTransport(() => {});
+
+    const { result } = renderHookWithProviders(
+      () => useComputeInstancesForCatalogItem('catalog-1', {}),
+      { role: 'providerAdmin', transport },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toMatchObject({
+      items: [makeVm('vm-1', ComputeInstanceState.RUNNING)],
+      total: 1,
+    });
+  });
+
+  it('does not fetch when catalogItemId is empty', async () => {
+    let listCalled = false;
+    const transport = createTestTransport(() => {
+      listCalled = true;
+    });
+
+    renderHookWithProviders(() => useComputeInstancesForCatalogItem('', {}), {
+      role: 'providerAdmin',
+      transport,
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(listCalled).toBe(false);
+  });
+
+  it('does not fetch when catalogItemId is whitespace-only', async () => {
+    let listCalled = false;
+    const transport = createTestTransport(() => {
+      listCalled = true;
+    });
+
+    renderHookWithProviders(() => useComputeInstancesForCatalogItem('   ', {}), {
+      role: 'providerAdmin',
+      transport,
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(listCalled).toBe(false);
   });
 });

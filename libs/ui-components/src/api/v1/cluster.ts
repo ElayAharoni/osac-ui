@@ -5,6 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { ClusterSchema, Clusters } from '@osac/types';
 
 import { useApiFetch } from '../api-context';
+import { catalogItemProvisionedResourcesFilter } from '../cel';
 import { type ListParams, apiQueryKey } from '../types';
 import { type ApiQueryClient, useApiQuery, useApiQueryClient } from '../use-api-query';
 
@@ -14,6 +15,21 @@ export const useClusters = (params: ListParams = {}) => {
     queryKey: apiQueryKey('v1/clusters', undefined, params),
     queryFn: () => client.list(params),
     select: (data) => data.items,
+  });
+};
+
+export const useClustersForCatalogItem = (
+  catalogItemId: string,
+  params: Pick<ListParams, 'limit' | 'offset'> = {},
+) => {
+  const client = useApiFetch(Clusters);
+  const trimmedId = catalogItemId.trim();
+  const filter = catalogItemProvisionedResourcesFilter(trimmedId);
+  return useApiQuery({
+    queryKey: apiQueryKey('v1/clusters', undefined, { ...params, filter }),
+    queryFn: () => client.list({ ...params, filter }),
+    select: (data) => ({ items: data.items, total: data.total }),
+    enabled: Boolean(trimmedId),
   });
 };
 

@@ -14,9 +14,11 @@ import {
 import {
   type PatchBareMetalInstanceInput,
   useBareMetalInstanceCatalogItems,
+  useBareMetalInstancesForCatalogItem,
   usePatchBareMetalInstance,
 } from './baremetal-instance';
 import { createCatalogHookTests } from '../../test-utils/catalogHookTestHelpers';
+import { renderHookWithProviders } from '../../test-utils/TestProviders';
 import { ApiProvider } from '../api-context';
 
 const item: BareMetalInstanceCatalogItem = {
@@ -138,5 +140,78 @@ describe('usePatchBareMetalInstance', () => {
     const req = await mutateAndCapture({ id: 'bmi-1', action: 'restart', currentTrigger: 3n });
     const object = (req as { object?: { spec?: { restartTrigger?: bigint } } }).object;
     expect(object?.spec?.restartTrigger).toBe(4n);
+  });
+});
+
+describe('useBareMetalInstancesForCatalogItem', () => {
+  const createTestTransport = (onList: (req: unknown) => void) =>
+    createRouterTransport((router) => {
+      router.service(BareMetalInstances, {
+        list: (req) => {
+          onList(req);
+          return { items: [makeBmi('bmi-1')], total: 1, size: 1 };
+        },
+      });
+    });
+
+  it('filters by catalog item id and forwards pagination params', async () => {
+    let captured: Record<string, unknown> | undefined;
+    const transport = createTestTransport((req) => {
+      captured = req as Record<string, unknown>;
+    });
+
+    const { result } = renderHookWithProviders(
+      () => useBareMetalInstancesForCatalogItem('catalog-1', { limit: 10, offset: 20 }),
+      { role: 'providerAdmin', transport },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(captured).toMatchObject({
+      filter: 'this.spec.catalog_item == "catalog-1"',
+      limit: 10,
+      offset: 20,
+    });
+  });
+
+  it('returns items and total from the list response', async () => {
+    const transport = createTestTransport(() => {});
+
+    const { result } = renderHookWithProviders(
+      () => useBareMetalInstancesForCatalogItem('catalog-1', {}),
+      { role: 'providerAdmin', transport },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toMatchObject({ items: [makeBmi('bmi-1')], total: 1 });
+  });
+
+  it('does not fetch when catalogItemId is empty', async () => {
+    let listCalled = false;
+    const transport = createTestTransport(() => {
+      listCalled = true;
+    });
+
+    renderHookWithProviders(() => useBareMetalInstancesForCatalogItem('', {}), {
+      role: 'providerAdmin',
+      transport,
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(listCalled).toBe(false);
+  });
+
+  it('does not fetch when catalogItemId is whitespace-only', async () => {
+    let listCalled = false;
+    const transport = createTestTransport(() => {
+      listCalled = true;
+    });
+
+    renderHookWithProviders(() => useBareMetalInstancesForCatalogItem('   ', {}), {
+      role: 'providerAdmin',
+      transport,
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(listCalled).toBe(false);
   });
 });
