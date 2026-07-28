@@ -175,6 +175,42 @@ export const formatCatalogFieldDefault = (def: CatalogFieldDefinition): string =
   return fieldDefinitionDefaultToInputString(defaultValue) || '—';
 };
 
+export const formatCatalogFieldValidationSummary = (def: CatalogFieldDefinition): string => {
+  const schema = def.validationSchema;
+  if (!schema || !Object.keys(schema).length) {
+    return '—';
+  }
+
+  const parts: string[] = [];
+  if (
+    schema.type === 'integer' &&
+    typeof schema.minimum !== 'number' &&
+    typeof schema.maximum !== 'number'
+  ) {
+    parts.push('whole number');
+  }
+  if (typeof schema.minimum === 'number') {
+    parts.push(`min: ${schema.minimum}`);
+  }
+  if (typeof schema.maximum === 'number') {
+    parts.push(`max: ${schema.maximum}`);
+  }
+  if (typeof schema.minLength === 'number') {
+    parts.push(`min length: ${schema.minLength}`);
+  }
+  if (typeof schema.maxLength === 'number') {
+    parts.push(`max length: ${schema.maxLength}`);
+  }
+  if (typeof schema.pattern === 'string' && schema.pattern) {
+    parts.push(`pattern: ${schema.pattern}`);
+  }
+  if (Array.isArray(schema.enum) && schema.enum.length > 0) {
+    parts.push(`enum: [${schema.enum.map(String).join(', ')}]`);
+  }
+
+  return parts.length > 0 ? parts.join(', ') : '—';
+};
+
 /**
  * fulfillment-service's built-in global tenant. Every object without an explicit tenant is
  * auto-assigned this value server-side, and it round-trips unmasked through the public API's

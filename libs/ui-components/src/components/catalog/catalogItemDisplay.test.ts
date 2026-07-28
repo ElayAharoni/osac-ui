@@ -10,8 +10,10 @@ import {
   catalogItemScope,
   catalogItemSubtitle,
   filterCatalogItemsBySearch,
+  formatCatalogFieldValidationSummary,
 } from './catalogItemDisplay';
 import {
+  type CatalogFieldDefinition,
   catalogItemFieldDefinitions,
   readCatalogItemFieldDefinitions,
 } from '../catalogProvision/catalogFieldDefinition';
@@ -320,6 +322,115 @@ describe('catalogItemScope', () => {
   it('returns project for a Tenant Admin item with a project set, regardless of metadata.tenant', () => {
     const item = publicVmItemWithMetadata(SHARED_TENANT, 'frontend');
     expect(catalogItemScope(item, 'tenantAdmin')).toEqual({ level: 'project', name: 'frontend' });
+  });
+});
+
+describe('formatCatalogFieldValidationSummary', () => {
+  const baseDef: CatalogFieldDefinition = {
+    path: 'cores',
+    displayName: 'vCPUs',
+    editable: true,
+  };
+
+  it('returns an em dash when there is no validation schema', () => {
+    expect(formatCatalogFieldValidationSummary(baseDef)).toBe('—');
+  });
+
+  it('returns an em dash for an empty validation schema', () => {
+    expect(formatCatalogFieldValidationSummary({ ...baseDef, validationSchema: {} })).toBe('—');
+  });
+
+  it('summarizes minimum and maximum together', () => {
+    expect(
+      formatCatalogFieldValidationSummary({
+        ...baseDef,
+        validationSchema: { minimum: 1, maximum: 10 },
+      }),
+    ).toBe('min: 1, max: 10');
+  });
+
+  it('summarizes a minimum-only constraint', () => {
+    expect(
+      formatCatalogFieldValidationSummary({ ...baseDef, validationSchema: { minimum: 2 } }),
+    ).toBe('min: 2');
+  });
+
+  it('summarizes string length constraints', () => {
+    expect(
+      formatCatalogFieldValidationSummary({
+        ...baseDef,
+        validationSchema: { minLength: 3, maxLength: 20 },
+      }),
+    ).toBe('min length: 3, max length: 20');
+  });
+
+  it('summarizes a regex pattern', () => {
+    expect(
+      formatCatalogFieldValidationSummary({
+        ...baseDef,
+        validationSchema: { pattern: '^[a-z]+$' },
+      }),
+    ).toBe('pattern: ^[a-z]+$');
+  });
+
+  it('summarizes an enum constraint', () => {
+    expect(
+      formatCatalogFieldValidationSummary({
+        ...baseDef,
+        validationSchema: { enum: ['a', 'b', 'c'] },
+      }),
+    ).toBe('enum: [a, b, c]');
+  });
+
+  it('combines multiple constraint types', () => {
+    expect(
+      formatCatalogFieldValidationSummary({
+        ...baseDef,
+        validationSchema: { pattern: '^[a-z]+$', minLength: 1 },
+      }),
+    ).toBe('min length: 1, pattern: ^[a-z]+$');
+  });
+
+  it('returns an em dash for unrecognized schema keywords', () => {
+    expect(
+      formatCatalogFieldValidationSummary({
+        ...baseDef,
+        validationSchema: { oneOf: [{ type: 'string' }, { type: 'number' }] },
+      }),
+    ).toBe('—');
+  });
+
+  it('includes a zero minimum (falsy but valid)', () => {
+    expect(
+      formatCatalogFieldValidationSummary({ ...baseDef, validationSchema: { minimum: 0 } }),
+    ).toBe('min: 0');
+  });
+
+  it('ignores an empty enum array', () => {
+    expect(
+      formatCatalogFieldValidationSummary({ ...baseDef, validationSchema: { enum: [] } }),
+    ).toBe('—');
+  });
+
+  it('returns an em dash for a type-only schema with no constraints', () => {
+    expect(
+      formatCatalogFieldValidationSummary({ ...baseDef, validationSchema: { type: 'boolean' } }),
+    ).toBe('—');
+  });
+
+  it('summarizes an integer type with no explicit bounds as a whole-number constraint', () => {
+    expect(
+      formatCatalogFieldValidationSummary({ ...baseDef, validationSchema: { type: 'integer' } }),
+    ).toBe('whole number');
+  });
+
+  it('omits the whole-number label when integer bounds are already present', () => {
+    expect(
+      formatCatalogFieldValidationSummary({
+        ...baseDef,
+        validationSchema: { type: 'integer', minimum: 1 },
+      }),
+    ).toBe('min: 1');
   });
 });
 
