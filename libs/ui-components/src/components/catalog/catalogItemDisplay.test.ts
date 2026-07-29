@@ -448,7 +448,7 @@ describe('formatCatalogFieldValidationSummary', () => {
     ).toBe('whole number');
   });
 
-  it('omits the whole-number label when integer bounds are already present', () => {
+  it('keeps the whole-number label alongside integer bounds', () => {
     expect(
       formatCatalogFieldValidationSummary(
         {
@@ -457,7 +457,7 @@ describe('formatCatalogFieldValidationSummary', () => {
         },
         t,
       ),
-    ).toBe('min: 1');
+    ).toBe('whole number, min: 1');
   });
 });
 

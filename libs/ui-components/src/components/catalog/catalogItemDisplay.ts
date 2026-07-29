@@ -187,11 +187,7 @@ export const formatCatalogFieldValidationSummary = (
   }
 
   const parts: string[] = [];
-  if (
-    schema.type === 'integer' &&
-    typeof schema.minimum !== 'number' &&
-    typeof schema.maximum !== 'number'
-  ) {
+  if (schema.type === 'integer') {
     parts.push(t('whole number'));
   }
   if (typeof schema.minimum === 'number') {
