@@ -172,4 +172,48 @@ describe('CatalogItemDetailActionButtons', () => {
       expect(screen.getByText('edit-page')).toBeInTheDocument();
     });
   });
+
+  it('disables Delete and the publish toggle and shows a tooltip when disabledReason is set', async () => {
+    const onDeleteClick = vi.fn();
+    const onTogglePublish = vi.fn();
+    const { user } = renderWithProviders(
+      <CatalogItemDetailActionButtons
+        catalogItem={privateItem()}
+        role="providerAdmin"
+        editHref="/admin/catalog/cluster/catalog-1/edit"
+        onDeleteClick={onDeleteClick}
+        onTogglePublish={onTogglePublish}
+        disabledReason="Deleting and publishing catalog items is not yet available."
+      />,
+    );
+
+    const deleteButton = screen.getByRole('button', { name: 'Delete' });
+    expect(deleteButton).toHaveAttribute('aria-disabled', 'true');
+    await user.click(deleteButton);
+    expect(onDeleteClick).not.toHaveBeenCalled();
+
+    expect(screen.getByRole('switch')).toBeDisabled();
+    await user.click(screen.getByRole('switch'));
+    expect(onTogglePublish).not.toHaveBeenCalled();
+
+    await user.hover(deleteButton);
+    expect(
+      await screen.findAllByText('Deleting and publishing catalog items is not yet available.'),
+    ).not.toHaveLength(0);
+  });
+
+  it('does not disable Delete or the publish toggle when disabledReason is not set', () => {
+    renderWithProviders(
+      <CatalogItemDetailActionButtons
+        catalogItem={privateItem()}
+        role="providerAdmin"
+        editHref="/admin/catalog/cluster/catalog-1/edit"
+        onDeleteClick={vi.fn()}
+        onTogglePublish={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Delete' })).not.toHaveAttribute('aria-disabled');
+    expect(screen.getByRole('switch')).not.toBeDisabled();
+  });
 });

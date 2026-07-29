@@ -65,6 +65,7 @@ const CatalogItemDetails = ({ catalogItem, kind, role, templateName }: CatalogIt
                   editHref={editHref}
                   onDeleteClick={() => {}}
                   onTogglePublish={() => {}}
+                  disabledReason={t('Deleting and publishing catalog items is not yet available.')}
                 />
               </FlexItem>
             </Flex>

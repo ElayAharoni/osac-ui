@@ -38,13 +38,16 @@ describe('CatalogItemDetails', () => {
     expect(screen.getAllByText('Published').length).toBeGreaterThan(0);
   });
 
-  it('renders the header actions', () => {
+  it('renders the header actions, with Delete and the publish toggle disabled', () => {
     renderWithProviders(
       <CatalogItemDetails catalogItem={catalogItem} kind="cluster" role="providerAdmin" />,
     );
 
     expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+    const deleteButton = screen.getByRole('button', { name: 'Delete' });
+    expect(deleteButton).toBeInTheDocument();
+    expect(deleteButton).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('switch')).toBeDisabled();
   });
 
   it('shows the Overview tab by default and switches to other tabs on click', async () => {
