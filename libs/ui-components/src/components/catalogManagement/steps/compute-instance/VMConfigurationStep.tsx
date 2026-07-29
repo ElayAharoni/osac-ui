@@ -7,7 +7,6 @@ import { useInstanceTypes } from '../../../../api/v1/instance-types';
 import { useTranslation } from '../../../../hooks/useTranslation';
 import OsacForm from '../../../Form/OsacForm';
 import { formatInstanceTypeOptionLabel } from '../../../vm/utils';
-import { BooleanFieldDefinition } from '../../fieldDefinitions/BooleanFieldDefinition';
 import { NumberFieldDefinition } from '../../fieldDefinitions/NumberFieldDefinition';
 import { ResourceSelectorFieldDefinition } from '../../fieldDefinitions/ResourceSelectorFieldDefinition';
 import { StringFieldDefinition } from '../../fieldDefinitions/StringFieldDefinition';
@@ -94,7 +93,11 @@ export const VMConfigurationStep = () => {
         }))}
         isLoading={instanceTypesLoading}
       />
-      <StringFieldDefinition path="image" label={t('Image')} fieldId="image" />
+      <StringFieldDefinition
+        path="image.source_ref"
+        label={t('Source Ref')}
+        fieldId="image-source-ref"
+      />
       <NumberFieldDefinition
         path="boot_disk.size_gib"
         label={t('Boot Disk Size (GiB)')}
@@ -108,7 +111,6 @@ export const VMConfigurationStep = () => {
         fieldId="user-data"
         multiline
       />
-      <BooleanFieldDefinition path="is_windows" label={t('Is Windows')} fieldId="is-windows" />
     </OsacForm>
   );
 };

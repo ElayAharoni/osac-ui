@@ -75,12 +75,11 @@ interface ComputeInstanceCatalogItemFormValues {
   scope: ScopeValues;
   fieldDefinitions: {
     instance_type: FieldDefinitionValue<LabeledResourceRef>;
-    image: FieldDefinitionValue<string>;
+    image: { source_ref: FieldDefinitionValue<string> };
     boot_disk: { size_gib: FieldDefinitionValue<string> };
     additional_disks: AdditionalDiskEntry[];
     run_strategy: FieldDefinitionValue<string>;
     user_data: FieldDefinitionValue<string>;
-    is_windows: FieldDefinitionValue<boolean>;
     ssh_key: FieldDefinitionValue<string>;
   };
 }
@@ -95,12 +94,11 @@ const createInitialValues = (
   scope: initialScopeForRole(role),
   fieldDefinitions: {
     instance_type: { editable: true, default: EMPTY_LABELED_RESOURCE_REF },
-    image: { editable: true, default: '' },
+    image: { source_ref: { editable: true, default: '' } },
     boot_disk: { size_gib: { editable: true, default: '' } },
     additional_disks: [],
     run_strategy: { editable: true, default: 'Always' },
     user_data: { editable: true, default: '' },
-    is_windows: { editable: true, default: false },
     ssh_key: { editable: true, default: '' },
   },
 });
@@ -168,7 +166,11 @@ const buildFieldDefinitions = (values: ComputeInstanceCatalogItemFormValues, t: 
     editable: values.fieldDefinitions.instance_type.editable,
     default: values.fieldDefinitions.instance_type.default.value,
   }),
-  buildFieldDefinition('image', t('Image'), values.fieldDefinitions.image),
+  buildFieldDefinition(
+    'image.source_ref',
+    t('Source Ref'),
+    values.fieldDefinitions.image.source_ref,
+  ),
   buildFieldDefinition(
     'boot_disk.size_gib',
     t('Boot Disk Size (GiB)'),
@@ -176,7 +178,6 @@ const buildFieldDefinitions = (values: ComputeInstanceCatalogItemFormValues, t: 
   ),
   buildFieldDefinition('run_strategy', t('Run Strategy'), values.fieldDefinitions.run_strategy),
   buildFieldDefinition('user_data', t('User Data'), values.fieldDefinitions.user_data),
-  buildFieldDefinition('is_windows', t('Is Windows'), values.fieldDefinitions.is_windows),
   buildFieldDefinition('ssh_key', t('SSH Key'), values.fieldDefinitions.ssh_key),
   ...values.fieldDefinitions.additional_disks.map((disk, index) =>
     buildFieldDefinition(

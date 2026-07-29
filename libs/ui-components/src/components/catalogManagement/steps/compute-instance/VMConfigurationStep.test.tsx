@@ -12,12 +12,11 @@ vi.mock('../../../../api/v1/instance-types', () => ({ useInstanceTypes: vi.fn() 
 const initialValues = {
   fieldDefinitions: {
     instance_type: { editable: false, default: { value: '', label: '' } },
-    image: { editable: false, default: '' },
+    image: { source_ref: { editable: false, default: '' } },
     boot_disk: { size_gib: { editable: false, default: '' } },
     additional_disks: [] as { rowId: string; sizeGib: string }[],
     run_strategy: { editable: true, default: 'Always' },
     user_data: { editable: true, default: '' },
-    is_windows: { editable: true, default: false },
   },
 };
 
@@ -36,11 +35,10 @@ describe('VMConfigurationStep', () => {
     );
 
     expect(screen.getByText('Instance Type')).toBeInTheDocument();
-    expect(screen.getByText('Image')).toBeInTheDocument();
+    expect(screen.getByText('Source Ref')).toBeInTheDocument();
     expect(screen.getByText('Boot Disk Size (GiB)')).toBeInTheDocument();
     expect(screen.getByText('Run Strategy')).toBeInTheDocument();
     expect(screen.getByText('User Data')).toBeInTheDocument();
-    expect(screen.getByText('Is Windows')).toBeInTheDocument();
   });
 
   it('adds and removes additional disk entries', async () => {
