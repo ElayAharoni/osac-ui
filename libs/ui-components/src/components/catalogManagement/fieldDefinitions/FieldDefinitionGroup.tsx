@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { FormFieldGroup, FormFieldGroupHeader } from '@patternfly/react-core';
+import { FormFieldGroup, FormFieldGroupHeader, Title } from '@patternfly/react-core';
 
 import { useTranslation } from '../../../hooks/useTranslation';
 import { SwitchField } from '../../Form/SwitchField';
@@ -23,7 +23,18 @@ export const FieldDefinitionGroup = ({
 
   return (
     <FormFieldGroup
-      header={<FormFieldGroupHeader titleText={{ text: label, id: `${fieldId}-group` }} />}
+      header={
+        <FormFieldGroupHeader
+          titleText={{
+            text: (
+              <Title headingLevel="h4" size="md">
+                {label}
+              </Title>
+            ),
+            id: `${fieldId}-group`,
+          }}
+        />
+      }
     >
       <SwitchField
         name={`${name}.editable`}

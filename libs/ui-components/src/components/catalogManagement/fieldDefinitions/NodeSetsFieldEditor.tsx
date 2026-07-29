@@ -7,6 +7,7 @@ import {
   FormFieldGroupHeader,
   Stack,
   StackItem,
+  Title,
 } from '@patternfly/react-core';
 
 import { hostTypeDisplayName, useHostTypes } from '../../../api/v1/host-types';
@@ -92,7 +93,14 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
         <FormFieldGroup
           header={
             <FormFieldGroupHeader
-              titleText={{ text: t('Size constraints'), id: 'node-sets-constraints-group' }}
+              titleText={{
+                text: (
+                  <Title headingLevel="h4" size="md">
+                    {t('Size constraints')}
+                  </Title>
+                ),
+                id: 'node-sets-constraints-group',
+              }}
               titleDescription={t(
                 'Applies to every node set below. When editable, tenants can choose a size within these bounds.',
               )}
@@ -131,7 +139,14 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
             <FormFieldGroup
               header={
                 <FormFieldGroupHeader
-                  titleText={{ text: t('Node set: {{key}}', { key }), id: `node-set-group-${key}` }}
+                  titleText={{
+                    text: (
+                      <Title headingLevel="h4" size="md">
+                        {t('Node set: {{key}}', { key })}
+                      </Title>
+                    ),
+                    id: `node-set-group-${key}`,
+                  }}
                   titleDescription={t('Host type: {{hostType}}', {
                     hostType: hostTypeLabel(hostTypeId),
                   })}
