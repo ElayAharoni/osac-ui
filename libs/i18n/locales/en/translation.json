@@ -11,7 +11,7 @@
   "Administration": "Administration",
   "All": "All",
   "API URL": "API URL",
-  "Applies to every node set below. When editable, tenants can choose a size within these bounds.": "Applies to every node set below. When editable, tenants can choose a size within these bounds.",
+  "Applies to every node set below. When Node Sets is editable, tenants can choose a size within these bounds.": "Applies to every node set below. When Node Sets is editable, tenants can choose a size within these bounds.",
   "At least one CIDR (IPv4 or IPv6) is required": "At least one CIDR (IPv4 or IPv6) is required",
   "At least one node set is required": "At least one node set is required",
   "Attach": "Attach",

@@ -10,11 +10,11 @@ import {
   Title,
 } from '@patternfly/react-core';
 
+import { FieldDefinitionGroup } from './FieldDefinitionGroup';
 import { hostTypeDisplayName, useHostTypes } from '../../../api/v1/host-types';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { getErrorMessage } from '../../../utils/error';
 import { InputField } from '../../Form/InputField';
-import { SwitchField } from '../../Form/SwitchField';
 
 const NODE_SETS_NAME = 'fieldDefinitions.node_sets';
 
@@ -81,88 +81,85 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
   }
 
   return (
-    <Stack hasGutter>
-      {hostTypesError ? (
-        <StackItem>
-          <Alert variant="danger" isInline title={t('Could not load host types')}>
-            {getErrorMessage(hostTypesError)}
-          </Alert>
-        </StackItem>
-      ) : null}
-      <StackItem>
-        <FormFieldGroup
-          header={
-            <FormFieldGroupHeader
-              titleText={{
-                text: (
-                  <Title headingLevel="h4" size="md">
-                    {t('Size constraints')}
-                  </Title>
-                ),
-                id: 'node-sets-constraints-group',
-              }}
-              titleDescription={t(
-                'Applies to every node set below. When editable, tenants can choose a size within these bounds.',
-              )}
-            />
-          }
-        >
-          <SwitchField
-            name={`${NODE_SETS_NAME}.editable`}
-            label={t('Editable')}
-            fieldId="node-sets-editable"
-          />
-          <Flex gap={{ default: 'gapMd' }}>
-            <FlexItem flex={{ default: 'flex_1' }}>
-              <InputField
-                name={`${NODE_SETS_NAME}.sizeMin`}
-                label={t('Minimum size (optional)')}
-                fieldId="node-sets-size-min"
-                type="number"
-              />
-            </FlexItem>
-            <FlexItem flex={{ default: 'flex_1' }}>
-              <InputField
-                name={`${NODE_SETS_NAME}.sizeMax`}
-                label={t('Maximum size (optional)')}
-                fieldId="node-sets-size-max"
-                type="number"
-              />
-            </FlexItem>
-          </Flex>
-        </FormFieldGroup>
-      </StackItem>
-      {templateNodeSetKeys.map((key) => {
-        const hostTypeId = template.nodeSets[key]?.hostType ?? '';
-        return (
-          <StackItem key={key}>
-            <FormFieldGroup
-              header={
-                <FormFieldGroupHeader
-                  titleText={{
-                    text: (
-                      <Title headingLevel="h4" size="md">
-                        {t('Node set: {{key}}', { key })}
-                      </Title>
-                    ),
-                    id: `node-set-group-${key}`,
-                  }}
-                  titleDescription={t('Host type: {{hostType}}', {
-                    hostType: hostTypeLabel(hostTypeId),
-                  })}
-                />
-              }
-            >
-              <InputField
-                name={`${NODE_SETS_NAME}.sizeByKey.${key}`}
-                label={t('Nodes ({{key}})', { key })}
-                fieldId={`node-set-size-${key}`}
-                type="number"
-              />
-            </FormFieldGroup>
+    <FieldDefinitionGroup label={t('Node Sets')} fieldId="node-sets" name={NODE_SETS_NAME}>
+      <Stack hasGutter>
+        {hostTypesError ? (
+          <StackItem>
+            <Alert variant="danger" isInline title={t('Could not load host types')}>
+              {getErrorMessage(hostTypesError)}
+            </Alert>
           </StackItem>
-        );
-      })}
-    </Stack>
+        ) : null}
+        <StackItem>
+          <FormFieldGroup
+            header={
+              <FormFieldGroupHeader
+                titleText={{
+                  text: (
+                    <Title headingLevel="h5" size="md">
+                      {t('Size constraints')}
+                    </Title>
+                  ),
+                  id: 'node-sets-constraints-group',
+                }}
+                titleDescription={t(
+                  'Applies to every node set below. When Node Sets is editable, tenants can choose a size within these bounds.',
+                )}
+              />
+            }
+          >
+            <Flex gap={{ default: 'gapMd' }}>
+              <FlexItem flex={{ default: 'flex_1' }}>
+                <InputField
+                  name={`${NODE_SETS_NAME}.sizeMin`}
+                  label={t('Minimum size (optional)')}
+                  fieldId="node-sets-size-min"
+                  type="number"
+                />
+              </FlexItem>
+              <FlexItem flex={{ default: 'flex_1' }}>
+                <InputField
+                  name={`${NODE_SETS_NAME}.sizeMax`}
+                  label={t('Maximum size (optional)')}
+                  fieldId="node-sets-size-max"
+                  type="number"
+                />
+              </FlexItem>
+            </Flex>
+          </FormFieldGroup>
+        </StackItem>
+        {templateNodeSetKeys.map((key) => {
+          const hostTypeId = template.nodeSets[key]?.hostType ?? '';
+          return (
+            <StackItem key={key}>
+              <FormFieldGroup
+                header={
+                  <FormFieldGroupHeader
+                    titleText={{
+                      text: (
+                        <Title headingLevel="h5" size="md">
+                          {t('Node set: {{key}}', { key })}
+                        </Title>
+                      ),
+                      id: `node-set-group-${key}`,
+                    }}
+                    titleDescription={t('Host type: {{hostType}}', {
+                      hostType: hostTypeLabel(hostTypeId),
+                    })}
+                  />
+                }
+              >
+                <InputField
+                  name={`${NODE_SETS_NAME}.sizeByKey.${key}`}
+                  label={t('Nodes ({{key}})', { key })}
+                  fieldId={`node-set-size-${key}`}
+                  type="number"
+                />
+              </FormFieldGroup>
+            </StackItem>
+          );
+        })}
+      </Stack>
+    </FieldDefinitionGroup>
   );
 };
