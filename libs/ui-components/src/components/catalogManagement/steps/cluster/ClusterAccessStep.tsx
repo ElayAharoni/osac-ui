@@ -9,13 +9,13 @@ export const ClusterAccessStep = () => {
     <OsacForm>
       <StringFieldDefinition
         path="ssh_public_key"
-        label={t('SSH Public Key')}
+        label={t('SSH public key')}
         fieldId="ssh-public-key"
         multiline
       />
       <StringFieldDefinition
         path="pull_secret"
-        label={t('Pull Secret')}
+        label={t('Pull secret')}
         fieldId="pull-secret"
         multiline
       />

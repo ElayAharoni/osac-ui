@@ -19,6 +19,6 @@ describe('BMAccessStep', () => {
       </Formik>,
     );
 
-    expect(screen.getByText('SSH Public Key')).toBeInTheDocument();
+    expect(screen.getByText('SSH public key')).toBeInTheDocument();
   });
 });

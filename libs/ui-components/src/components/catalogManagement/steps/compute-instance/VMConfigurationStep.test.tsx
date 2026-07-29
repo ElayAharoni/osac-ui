@@ -34,11 +34,11 @@ describe('VMConfigurationStep', () => {
       </Formik>,
     );
 
-    expect(screen.getByText('Instance Type')).toBeInTheDocument();
     expect(screen.getByText('Source Ref')).toBeInTheDocument();
-    expect(screen.getByText('Boot Disk Size (GiB)')).toBeInTheDocument();
-    expect(screen.getByText('Run Strategy')).toBeInTheDocument();
-    expect(screen.getByText('User Data')).toBeInTheDocument();
+    expect(screen.getByText('Instance type')).toBeInTheDocument();
+    expect(screen.getByText('Boot disk size (GiB)')).toBeInTheDocument();
+    expect(screen.getByText('Run strategy')).toBeInTheDocument();
+    expect(screen.getByText('User data')).toBeInTheDocument();
   });
 
   it('adds and removes additional disk entries', async () => {

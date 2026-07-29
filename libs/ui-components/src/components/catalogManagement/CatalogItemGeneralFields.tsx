@@ -1,7 +1,7 @@
 import { useField } from 'formik';
 
+import { usePrivateTenants } from '../../api/v1/private/tenant';
 import { useProjects } from '../../api/v1/projects';
-import { useTenants } from '../../api/v1/tenant';
 import { useSession } from '../../hooks/use-session';
 import { useTranslation } from '../../hooks/useTranslation';
 import { InputField } from '../Form/InputField';
@@ -23,7 +23,7 @@ export const CatalogItemGeneralFields = ({
   const [scopeLevelField] = useField<string>('scope.level');
   // Only a CSP Admin ever sees the organization dropdown below — a Tenant Admin has no permission
   // to call the private Tenants API this hook uses, so it must stay disabled for that role.
-  const { data: tenants = [] } = useTenants(role === 'providerAdmin');
+  const { data: tenants = [] } = usePrivateTenants(role === 'providerAdmin');
   const { data: projects = [] } = useProjects();
 
   const scopeOptions =

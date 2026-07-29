@@ -18,13 +18,17 @@ import { InputField } from '../../Form/InputField';
 
 const NODE_SETS_NAME = 'fieldDefinitions.node_sets';
 
+export interface NodeSetEntry {
+  default: string;
+  min?: string;
+  max?: string;
+}
+
 export interface NodeSetsFieldValue {
-  /** Default node-set size per template node-set key — the only thing an admin can set; host type
-   * and the set of keys are entirely determined by the selected cluster template. */
-  sizeByKey: Record<string, string>;
+  /** One entry per template node-set key — the only thing an admin can set; host type and the set
+   * of keys are entirely determined by the selected cluster template. */
+  entriesByKey: Record<string, NodeSetEntry>;
   editable: boolean;
-  sizeMin?: string;
-  sizeMax?: string;
 }
 
 /** The subset of `ClusterTemplate` (public or private — both are structurally compatible here) that
@@ -81,7 +85,7 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
   }
 
   return (
-    <FieldDefinitionGroup label={t('Node Sets')} fieldId="node-sets" name={NODE_SETS_NAME}>
+    <FieldDefinitionGroup label={t('Node sets')} fieldId="node-sets" name={NODE_SETS_NAME}>
       <Stack hasGutter>
         {hostTypesError ? (
           <StackItem>
@@ -90,44 +94,6 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
             </Alert>
           </StackItem>
         ) : null}
-        <StackItem>
-          <FormFieldGroup
-            header={
-              <FormFieldGroupHeader
-                titleText={{
-                  text: (
-                    <Title headingLevel="h5" size="md">
-                      {t('Size constraints')}
-                    </Title>
-                  ),
-                  id: 'node-sets-constraints-group',
-                }}
-                titleDescription={t(
-                  'Applies to every node set below. When Node Sets is editable, tenants can choose a size within these bounds.',
-                )}
-              />
-            }
-          >
-            <Flex gap={{ default: 'gapMd' }}>
-              <FlexItem flex={{ default: 'flex_1' }}>
-                <InputField
-                  name={`${NODE_SETS_NAME}.sizeMin`}
-                  label={t('Minimum size (optional)')}
-                  fieldId="node-sets-size-min"
-                  type="number"
-                />
-              </FlexItem>
-              <FlexItem flex={{ default: 'flex_1' }}>
-                <InputField
-                  name={`${NODE_SETS_NAME}.sizeMax`}
-                  label={t('Maximum size (optional)')}
-                  fieldId="node-sets-size-max"
-                  type="number"
-                />
-              </FlexItem>
-            </Flex>
-          </FormFieldGroup>
-        </StackItem>
         {templateNodeSetKeys.map((key) => {
           const hostTypeId = template.nodeSets[key]?.hostType ?? '';
           return (
@@ -149,12 +115,32 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
                   />
                 }
               >
-                <InputField
-                  name={`${NODE_SETS_NAME}.sizeByKey.${key}`}
-                  label={t('Nodes ({{key}})', { key })}
-                  fieldId={`node-set-size-${key}`}
-                  type="number"
-                />
+                <Flex gap={{ default: 'gapMd' }}>
+                  <FlexItem flex={{ default: 'flex_1' }}>
+                    <InputField
+                      name={`${NODE_SETS_NAME}.entriesByKey.${key}.default`}
+                      label={t('Default nodes ({{key}})', { key })}
+                      fieldId={`node-set-default-${key}`}
+                      type="number"
+                    />
+                  </FlexItem>
+                  <FlexItem flex={{ default: 'flex_1' }}>
+                    <InputField
+                      name={`${NODE_SETS_NAME}.entriesByKey.${key}.min`}
+                      label={t('Minimum nodes ({{key}}, optional)', { key })}
+                      fieldId={`node-set-min-${key}`}
+                      type="number"
+                    />
+                  </FlexItem>
+                  <FlexItem flex={{ default: 'flex_1' }}>
+                    <InputField
+                      name={`${NODE_SETS_NAME}.entriesByKey.${key}.max`}
+                      label={t('Maximum nodes ({{key}}, optional)', { key })}
+                      fieldId={`node-set-max-${key}`}
+                      type="number"
+                    />
+                  </FlexItem>
+                </Flex>
               </FormFieldGroup>
             </StackItem>
           );

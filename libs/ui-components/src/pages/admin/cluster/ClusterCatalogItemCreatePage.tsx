@@ -98,7 +98,7 @@ const createInitialValues = (
   fieldDefinitions: {
     release_image: { editable: true, default: '' },
     node_sets: {
-      sizeByKey: {},
+      entriesByKey: {},
       editable: true,
     },
     network: {
@@ -122,29 +122,22 @@ const cidrFormatTest = (t: TFunction) => ({
 
 // Node sets are entirely determined by the selected cluster template — fulfillment-service rejects
 // any node set whose key or host type doesn't match the template (see
-// `PrivateClustersServer.validateNodeSets`). An admin can only provide a default `size` per
-// template-defined node set, so the schema is built dynamically, one positive-size check per
-// current template node-set key, rather than a fixed shape.
-const nodeSetsSchema = (t: TFunction, templateNodeSetKeys: string[]) =>
+// `PrivateClustersServer.validateNodeSets`). An admin can only provide a default size and optional
+// min/max per template-defined node set, so the schema is built dynamically, one entry per current
+// template node-set key, rather than a fixed shape.
+const nodeSetEntrySchema = (t: TFunction) =>
   Yup.object({
-    sizeByKey: Yup.object(
-      Object.fromEntries(
-        templateNodeSetKeys.map((key) => [
-          key,
-          Yup.string().test(
-            'positive-size',
-            t('Size must be a positive number'),
-            (value) => Number.isFinite(Number(value)) && Number(value) > 0,
-          ),
-        ]),
-      ),
+    default: Yup.string().test(
+      'positive-size',
+      t('Size must be a positive number'),
+      (value) => Number.isFinite(Number(value)) && Number(value) > 0,
     ),
-    sizeMin: Yup.string().test(
+    min: Yup.string().test(
       'numeric-size-min',
       t('Must be a number'),
       (value) => !value || Number.isFinite(Number(value)),
     ),
-    sizeMax: Yup.string()
+    max: Yup.string()
       .test(
         'numeric-size-max',
         t('Must be a number'),
@@ -154,7 +147,7 @@ const nodeSetsSchema = (t: TFunction, templateNodeSetKeys: string[]) =>
         'size-max-not-less-than-min',
         t('Maximum must be greater than or equal to minimum'),
         function (value) {
-          const minimum = (this.parent as { sizeMin?: string }).sizeMin;
+          const minimum = (this.parent as { min?: string }).min;
           if (
             !value ||
             !minimum ||
@@ -166,6 +159,13 @@ const nodeSetsSchema = (t: TFunction, templateNodeSetKeys: string[]) =>
           return Number(value) >= Number(minimum);
         },
       ),
+  });
+
+const nodeSetsSchema = (t: TFunction, templateNodeSetKeys: string[]) =>
+  Yup.object({
+    entriesByKey: Yup.object(
+      Object.fromEntries(templateNodeSetKeys.map((key) => [key, nodeSetEntrySchema(t)])),
+    ),
   });
 
 const getStepValidationSchema = (
@@ -250,7 +250,7 @@ const buildNodeSetsDefault = (
 ): Record<string, unknown> => {
   const result: Record<string, { hostType: string; size: number }> = {};
   for (const [key, templateNodeSet] of Object.entries(template?.nodeSets ?? {})) {
-    const size = Number(nodeSets.sizeByKey[key]);
+    const size = Number(nodeSets.entriesByKey[key]?.default);
     if (!Number.isFinite(size) || size <= 0) {
       continue;
     }
@@ -259,17 +259,19 @@ const buildNodeSetsDefault = (
   return result;
 };
 
+// Each node set's min/max bounds its own default independently — the resulting JSON-Schema
+// fragment nests `size` bounds per key, not as a shared `additionalProperties` constraint.
 const buildNodeSetsValidation = (
   nodeSets: NodeSetsFieldValue,
 ): Record<string, unknown> | undefined => {
-  const minimum = parseOptionalNumber(String(nodeSets.sizeMin ?? ''));
-  const maximum = parseOptionalNumber(String(nodeSets.sizeMax ?? ''));
-  if (minimum === undefined && maximum === undefined) {
-    return undefined;
-  }
-  return {
-    type: 'object',
-    additionalProperties: {
+  const properties: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(nodeSets.entriesByKey)) {
+    const minimum = parseOptionalNumber(entry.min);
+    const maximum = parseOptionalNumber(entry.max);
+    if (minimum === undefined && maximum === undefined) {
+      continue;
+    }
+    properties[key] = {
       type: 'object',
       properties: {
         size: {
@@ -277,8 +279,12 @@ const buildNodeSetsValidation = (
           ...(maximum !== undefined ? { maximum } : {}),
         },
       },
-    },
-  };
+    };
+  }
+  if (Object.keys(properties).length === 0) {
+    return undefined;
+  }
+  return { type: 'object', properties };
 };
 
 const buildFieldDefinitions = (
@@ -286,7 +292,7 @@ const buildFieldDefinitions = (
   t: TFunction,
   template: NodeSetsTemplateLike | undefined,
 ) => [
-  buildFieldDefinition('release_image', t('Release Image'), values.fieldDefinitions.release_image),
+  buildFieldDefinition('release_image', t('Release image'), values.fieldDefinitions.release_image),
   buildFieldDefinition('network.pod_cidr', t('Pod CIDR'), values.fieldDefinitions.network.pod_cidr),
   buildFieldDefinition(
     'network.service_cidr',
@@ -295,11 +301,11 @@ const buildFieldDefinitions = (
   ),
   buildFieldDefinition(
     'ssh_public_key',
-    t('SSH Public Key'),
+    t('SSH public key'),
     values.fieldDefinitions.ssh_public_key,
   ),
-  buildFieldDefinition('pull_secret', t('Pull Secret'), values.fieldDefinitions.pull_secret),
-  buildFieldDefinition('node_sets', t('Node Sets'), {
+  buildFieldDefinition('pull_secret', t('Pull secret'), values.fieldDefinitions.pull_secret),
+  buildFieldDefinition('node_sets', t('Node sets'), {
     editable: values.fieldDefinitions.node_sets.editable,
     default: buildNodeSetsDefault(values.fieldDefinitions.node_sets, template),
     validation: buildNodeSetsValidation(values.fieldDefinitions.node_sets),
@@ -338,6 +344,10 @@ export const ClusterCatalogItemCreatePage = () => {
     [t, templateNodeSetKeys, role],
   );
 
+  // Deliberately useFormik + FormikProvider rather than the <Formik> component (used in the other
+  // two catalog-item wizards): validationSchema here depends on formik.values.template.value (via
+  // templateNodeSetKeys above), so it must be computed in this same scope, before Formik exists —
+  // <Formik>'s render-prop only exposes `formik` after the component is already instantiated.
   const formik = useFormik<ClusterCatalogItemFormValues>({
     initialValues,
     validationSchema,

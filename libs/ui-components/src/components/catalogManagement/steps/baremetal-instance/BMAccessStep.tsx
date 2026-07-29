@@ -9,7 +9,7 @@ export const BMAccessStep = () => {
     <OsacForm>
       <StringFieldDefinition
         path="ssh_public_key"
-        label={t('SSH Public Key')}
+        label={t('SSH public key')}
         fieldId="ssh-public-key"
         multiline
       />

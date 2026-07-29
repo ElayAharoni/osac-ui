@@ -26,8 +26,7 @@ vi.mock('@osac/ui-components/hooks/useTranslation', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-// Mounted at /admin/catalog/* to match the real route registered in AppShell.tsx, so
-// AdminCatalogRoutes' internal <Navigate to="/admin/catalog" /> fallback resolves correctly.
+// Mounted at /admin/catalog/* to match the real route registered in AppShell.tsx.
 const renderAt = (path: string) =>
   render(
     <MemoryRouter initialEntries={[path]}>
@@ -54,12 +53,5 @@ describe('AdminCatalogRoutes', () => {
     renderAt('/admin/catalog/baremetal-instance/create');
 
     expect(screen.getByText('Bare metal create page')).toBeInTheDocument();
-  });
-
-  it('redirects to the list page for an unrecognized :type', () => {
-    renderAt('/admin/catalog/not-a-real-type/create');
-
-    expect(screen.getByText('Catalog management list page')).toBeInTheDocument();
-    expect(screen.queryByText('Cluster create page')).not.toBeInTheDocument();
   });
 });

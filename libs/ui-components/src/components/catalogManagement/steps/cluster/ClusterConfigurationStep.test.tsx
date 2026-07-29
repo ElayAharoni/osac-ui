@@ -15,7 +15,7 @@ const initialValues = {
   template: { value: 'tmpl-1', label: 'Template One' },
   fieldDefinitions: {
     release_image: { editable: false, default: '' },
-    node_sets: { sizeByKey: {}, editable: true },
+    node_sets: { entriesByKey: {}, editable: true },
   },
 };
 
@@ -36,7 +36,7 @@ describe('ClusterConfigurationStep', () => {
       </Formik>,
     );
 
-    expect(screen.getByText('Release Image')).toBeInTheDocument();
+    expect(screen.getByText('Release image')).toBeInTheDocument();
     expect(screen.getByText('Node set: workers')).toBeInTheDocument();
     expect(screen.getByText('Host type: Small')).toBeInTheDocument();
   });

@@ -26,7 +26,7 @@ export const ClusterConfigurationStep = ({ templates }: ClusterConfigurationStep
     <OsacForm>
       <StringFieldDefinition
         path="release_image"
-        label={t('Release Image')}
+        label={t('Release image')}
         fieldId="release-image"
       />
       <NodeSetsFieldEditor template={selectedTemplate} />

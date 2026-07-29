@@ -11,7 +11,5 @@ export const useProjects = (enabled = true) => {
     queryFn: () => client.list({}),
     select: (data) => data.items,
     enabled,
-    // Reference data for a wizard dropdown — no need to poll while the form is open.
-    refetchInterval: false,
   });
 };

@@ -7,7 +7,12 @@ export const VMAccessStep = () => {
 
   return (
     <OsacForm>
-      <StringFieldDefinition path="ssh_key" label={t('SSH Key')} fieldId="ssh-key" multiline />
+      <StringFieldDefinition
+        path="ssh_key"
+        label={t('SSH public key')}
+        fieldId="ssh-key"
+        multiline
+      />
     </OsacForm>
   );
 };

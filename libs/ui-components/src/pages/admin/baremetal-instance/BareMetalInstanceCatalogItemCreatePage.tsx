@@ -16,7 +16,7 @@ import {
   WizardFooterWrapper,
   WizardStep,
 } from '@patternfly/react-core';
-import { FormikProvider, useFormik } from 'formik';
+import { Formik } from 'formik';
 import type { TFunction } from 'i18next';
 import * as Yup from 'yup';
 
@@ -129,11 +129,11 @@ const getFullFormValidationSchema = (t: TFunction, role: ReturnType<typeof useSe
   });
 
 const buildFieldDefinitions = (values: BareMetalInstanceCatalogItemFormValues, t: TFunction) => [
-  buildFieldDefinition('run_strategy', t('Run Strategy'), values.fieldDefinitions.run_strategy),
-  buildFieldDefinition('user_data', t('User Data'), values.fieldDefinitions.user_data),
+  buildFieldDefinition('run_strategy', t('Run strategy'), values.fieldDefinitions.run_strategy),
+  buildFieldDefinition('user_data', t('User data'), values.fieldDefinitions.user_data),
   buildFieldDefinition(
     'ssh_public_key',
-    t('SSH Public Key'),
+    t('SSH public key'),
     values.fieldDefinitions.ssh_public_key,
   ),
 ];
@@ -156,35 +156,6 @@ export const BareMetalInstanceCatalogItemCreatePage = () => {
     [activeStepId, t, role],
   );
   const fullFormSchema = useMemo(() => getFullFormValidationSchema(t, role), [t, role]);
-
-  const formik = useFormik<BareMetalInstanceCatalogItemFormValues>({
-    initialValues,
-    validationSchema,
-    validateOnBlur: true,
-    validateOnChange: false,
-    onSubmit: async (values) => {
-      setSubmitError(undefined);
-      try {
-        const payload: MessageInitShape<typeof BareMetalInstanceCatalogItemSchema> = {
-          title: values.title.trim(),
-          description: values.description.trim(),
-          template: values.template.value,
-          published: false,
-          ...buildScopePayloadFields(values.scope, role, values.resourceName),
-          // buildFieldDefinition()'s `default` is a decoded google.protobuf.Value init shape;
-          // MessageInitShape can't structurally verify it against the generated Value type, so
-          // this one property needs a cast (see buildFieldDefinition in fieldDefinitionValue.ts).
-          fieldDefinitions: buildFieldDefinitions(values, t) as MessageInitShape<
-            typeof BareMetalInstanceCatalogItemSchema
-          >['fieldDefinitions'],
-        };
-        await createBareMetalInstanceCatalogItem(payload);
-        navigate('/admin/catalog');
-      } catch (error) {
-        setSubmitError(getErrorMessage(error));
-      }
-    },
-  });
 
   const templateOptions = templates.map((template) => ({
     value: template.id,
@@ -211,59 +182,92 @@ export const BareMetalInstanceCatalogItemCreatePage = () => {
           </Content>
         </Stack>
       </PageSection>
-      <FormikProvider value={formik}>
-        <PageSection hasBodyWrapper={false} type={PageSectionTypes.wizard}>
-          <Wizard
-            navAriaLabel={t('Create bare metal catalog item steps')}
-            isVisitRequired
-            footer={
-              <WizardFooterWrapper>
-                <CatalogItemWizardFooter
-                  formik={formik}
-                  stepIds={STEP_IDS}
-                  onActiveStepIdChange={(id) => setActiveStepId(id as BareMetalStepId)}
-                  fullFormSchema={fullFormSchema}
-                  setValidationAlert={setValidationAlert}
-                  isPending={isPending}
-                />
-              </WizardFooterWrapper>
-            }
-          >
-            {STEP_IDS.map((stepId) => (
-              <WizardStep key={stepId} id={stepId} name={t(STEP_LABEL_KEYS[stepId])}>
-                <FieldValidationProvider value={validationAlert}>
-                  <Stack hasGutter>
-                    {validationAlert ? (
-                      <StackItem>
-                        <Alert
-                          variant="danger"
-                          isInline
-                          title={t('This step has validation errors')}
+      <Formik<BareMetalInstanceCatalogItemFormValues>
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        validateOnBlur
+        validateOnChange={false}
+        onSubmit={async (values) => {
+          setSubmitError(undefined);
+          try {
+            const payload: MessageInitShape<typeof BareMetalInstanceCatalogItemSchema> = {
+              title: values.title.trim(),
+              description: values.description.trim(),
+              template: values.template.value,
+              published: false,
+              ...buildScopePayloadFields(values.scope, role, values.resourceName),
+              // buildFieldDefinition()'s `default` is a decoded google.protobuf.Value init shape;
+              // MessageInitShape can't structurally verify it against the generated Value type, so
+              // this one property needs a cast (see buildFieldDefinition in fieldDefinitionValue.ts).
+              fieldDefinitions: buildFieldDefinitions(values, t) as MessageInitShape<
+                typeof BareMetalInstanceCatalogItemSchema
+              >['fieldDefinitions'],
+            };
+            await createBareMetalInstanceCatalogItem(payload);
+            navigate('/admin/catalog');
+          } catch (error) {
+            setSubmitError(getErrorMessage(error));
+          }
+        }}
+      >
+        {(formik) => (
+          <PageSection hasBodyWrapper={false} type={PageSectionTypes.wizard}>
+            <Wizard
+              navAriaLabel={t('Create bare metal catalog item steps')}
+              isVisitRequired
+              footer={
+                <WizardFooterWrapper>
+                  <CatalogItemWizardFooter
+                    formik={formik}
+                    stepIds={STEP_IDS}
+                    onActiveStepIdChange={(id) => setActiveStepId(id as BareMetalStepId)}
+                    fullFormSchema={fullFormSchema}
+                    setValidationAlert={setValidationAlert}
+                    isPending={isPending}
+                  />
+                </WizardFooterWrapper>
+              }
+            >
+              {STEP_IDS.map((stepId) => (
+                <WizardStep key={stepId} id={stepId} name={t(STEP_LABEL_KEYS[stepId])}>
+                  <FieldValidationProvider value={validationAlert}>
+                    <Stack hasGutter>
+                      {validationAlert ? (
+                        <StackItem>
+                          <Alert
+                            variant="danger"
+                            isInline
+                            title={t('This step has validation errors')}
+                          />
+                        </StackItem>
+                      ) : null}
+                      {submitError ? (
+                        <StackItem>
+                          <Alert
+                            variant="danger"
+                            isInline
+                            title={t('Could not create catalog item')}
+                          >
+                            {submitError}
+                          </Alert>
+                        </StackItem>
+                      ) : null}
+                      {stepId === 'general' ? (
+                        <CatalogItemGeneralFields
+                          templates={templateOptions}
+                          templatesLoading={templatesLoading}
                         />
-                      </StackItem>
-                    ) : null}
-                    {submitError ? (
-                      <StackItem>
-                        <Alert variant="danger" isInline title={t('Could not create catalog item')}>
-                          {submitError}
-                        </Alert>
-                      </StackItem>
-                    ) : null}
-                    {stepId === 'general' ? (
-                      <CatalogItemGeneralFields
-                        templates={templateOptions}
-                        templatesLoading={templatesLoading}
-                      />
-                    ) : null}
-                    {stepId === 'configuration' ? <BMConfigurationStep /> : null}
-                    {stepId === 'access' ? <BMAccessStep /> : null}
-                  </Stack>
-                </FieldValidationProvider>
-              </WizardStep>
-            ))}
-          </Wizard>
-        </PageSection>
-      </FormikProvider>
+                      ) : null}
+                      {stepId === 'configuration' ? <BMConfigurationStep /> : null}
+                      {stepId === 'access' ? <BMAccessStep /> : null}
+                    </Stack>
+                  </FieldValidationProvider>
+                </WizardStep>
+              ))}
+            </Wizard>
+          </PageSection>
+        )}
+      </Formik>
     </>
   );
 };

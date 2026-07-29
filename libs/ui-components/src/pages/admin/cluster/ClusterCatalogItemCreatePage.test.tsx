@@ -10,8 +10,8 @@ import {
 
 import { ClusterCatalogItemCreatePage } from './ClusterCatalogItemCreatePage';
 import * as hostTypesApi from '../../../api/v1/host-types';
+import * as tenantApi from '../../../api/v1/private/tenant';
 import * as projectsApi from '../../../api/v1/projects';
-import * as tenantApi from '../../../api/v1/tenant';
 import { SessionProvider } from '../../../hooks/use-session';
 import { renderWithProviders } from '../../../test-utils/TestProviders';
 
@@ -19,11 +19,13 @@ vi.mock('../../../api/v1/host-types', () => ({
   useHostTypes: vi.fn(),
   hostTypeDisplayName: (hostType: { id: string; title?: string }) => hostType.title ?? hostType.id,
 }));
-vi.mock('../../../api/v1/tenant', () => ({ useTenants: vi.fn() }));
+vi.mock('../../../api/v1/private/tenant', () => ({ usePrivateTenants: vi.fn() }));
 vi.mock('../../../api/v1/projects', () => ({ useProjects: vi.fn() }));
 
 const asQueryResult = <T,>(data: T) =>
-  ({ data, isLoading: false, error: null }) as unknown as ReturnType<typeof tenantApi.useTenants>;
+  ({ data, isLoading: false, error: null }) as unknown as ReturnType<
+    typeof tenantApi.usePrivateTenants
+  >;
 
 const mockSharedData = () => {
   vi.mocked(hostTypesApi.useHostTypes).mockReturnValue({
@@ -32,7 +34,7 @@ const mockSharedData = () => {
     error: null,
     refetch: vi.fn(),
   } as unknown as ReturnType<typeof hostTypesApi.useHostTypes>);
-  vi.mocked(tenantApi.useTenants).mockReturnValue(asQueryResult([]));
+  vi.mocked(tenantApi.usePrivateTenants).mockReturnValue(asQueryResult([]));
   vi.mocked(projectsApi.useProjects).mockReturnValue(
     asQueryResult([]) as unknown as ReturnType<typeof projectsApi.useProjects>,
   );
@@ -53,7 +55,7 @@ const fillNames = async (
 };
 
 const fillFirstNodeSet = async (user: ReturnType<typeof renderPage>['user']) => {
-  await user.type(screen.getByLabelText(/^Nodes \(/), '3');
+  await user.type(screen.getByLabelText(/^Default nodes \(/), '3');
 };
 
 const createFn = vi.fn(() => ({ object: { id: 'new-id', title: 'My Cluster' } }));

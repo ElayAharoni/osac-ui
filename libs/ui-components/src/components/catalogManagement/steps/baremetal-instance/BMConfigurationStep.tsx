@@ -7,10 +7,10 @@ export const BMConfigurationStep = () => {
 
   return (
     <OsacForm>
-      <StringFieldDefinition path="run_strategy" label={t('Run Strategy')} fieldId="run-strategy" />
+      <StringFieldDefinition path="run_strategy" label={t('Run strategy')} fieldId="run-strategy" />
       <StringFieldDefinition
         path="user_data"
-        label={t('User Data')}
+        label={t('User data')}
         fieldId="user-data"
         multiline
       />

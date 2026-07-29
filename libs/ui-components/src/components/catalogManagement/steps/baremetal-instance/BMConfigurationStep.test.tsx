@@ -20,7 +20,7 @@ describe('BMConfigurationStep', () => {
       </Formik>,
     );
 
-    expect(screen.getByText('Run Strategy')).toBeInTheDocument();
-    expect(screen.getByText('User Data')).toBeInTheDocument();
+    expect(screen.getByText('Run strategy')).toBeInTheDocument();
+    expect(screen.getByText('User data')).toBeInTheDocument();
   });
 });

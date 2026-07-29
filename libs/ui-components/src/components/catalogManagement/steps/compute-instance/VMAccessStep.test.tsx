@@ -12,13 +12,13 @@ const initialValues = {
 };
 
 describe('VMAccessStep', () => {
-  it('renders the SSH key field', () => {
+  it('renders the SSH public key field', () => {
     renderWithProviders(
       <Formik initialValues={initialValues} onSubmit={() => undefined}>
         <VMAccessStep />
       </Formik>,
     );
 
-    expect(screen.getByText('SSH Key')).toBeInTheDocument();
+    expect(screen.getByText('SSH public key')).toBeInTheDocument();
   });
 });

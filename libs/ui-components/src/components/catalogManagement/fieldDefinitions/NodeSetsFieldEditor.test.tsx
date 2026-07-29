@@ -25,13 +25,17 @@ const mockHostTypes = (
   } as unknown as ReturnType<typeof hostTypesApi.useHostTypes>);
 };
 
+interface NodeSetEntryValue {
+  default?: string;
+  min?: string;
+  max?: string;
+}
+
 interface Values {
   fieldDefinitions: {
     node_sets: {
-      sizeByKey: Record<string, string>;
+      entriesByKey: Record<string, NodeSetEntryValue>;
       editable: boolean;
-      sizeMin?: string;
-      sizeMax?: string;
     };
   };
 }
@@ -52,8 +56,12 @@ const renderEditor = (initialValues: Values, template: NodeSetsTemplateLike | un
           <output aria-label="editable-value">
             {String(values.fieldDefinitions.node_sets.editable)}
           </output>
-          <output aria-label="min-value">{values.fieldDefinitions.node_sets.sizeMin ?? ''}</output>
-          <output aria-label="max-value">{values.fieldDefinitions.node_sets.sizeMax ?? ''}</output>
+          <output aria-label="workers-min-value">
+            {values.fieldDefinitions.node_sets.entriesByKey.workers?.min ?? ''}
+          </output>
+          <output aria-label="workers-max-value">
+            {values.fieldDefinitions.node_sets.entriesByKey.workers?.max ?? ''}
+          </output>
         </>
       )}
     </Formik>,
@@ -62,7 +70,10 @@ const renderEditor = (initialValues: Values, template: NodeSetsTemplateLike | un
 describe('NodeSetsFieldEditor', () => {
   it('prompts for a template when none is selected', () => {
     mockHostTypes();
-    renderEditor({ fieldDefinitions: { node_sets: { sizeByKey: {}, editable: true } } }, undefined);
+    renderEditor(
+      { fieldDefinitions: { node_sets: { entriesByKey: {}, editable: true } } },
+      undefined,
+    );
 
     expect(screen.getByText('Select a template to configure node sets')).toBeInTheDocument();
   });
@@ -70,7 +81,7 @@ describe('NodeSetsFieldEditor', () => {
   it('shows a message when the selected template has no node sets', () => {
     mockHostTypes();
     renderEditor(
-      { fieldDefinitions: { node_sets: { sizeByKey: {}, editable: true } } },
+      { fieldDefinitions: { node_sets: { entriesByKey: {}, editable: true } } },
       { nodeSets: {} },
     );
 
@@ -80,7 +91,7 @@ describe('NodeSetsFieldEditor', () => {
   it('renders one row per template node set, with the host type read-only', () => {
     mockHostTypes();
     renderEditor(
-      { fieldDefinitions: { node_sets: { sizeByKey: {}, editable: true } } },
+      { fieldDefinitions: { node_sets: { entriesByKey: {}, editable: true } } },
       twoNodeSetTemplate,
     );
 
@@ -93,17 +104,20 @@ describe('NodeSetsFieldEditor', () => {
     expect(screen.queryByLabelText(/^Host type/)).not.toBeInTheDocument();
   });
 
-  it('lets the admin set a default size per template node set', async () => {
+  it('lets the admin set an independent default/min/max per template node set', async () => {
     mockHostTypes();
     const { user } = renderEditor(
-      { fieldDefinitions: { node_sets: { sizeByKey: {}, editable: true } } },
+      { fieldDefinitions: { node_sets: { entriesByKey: {}, editable: true } } },
       twoNodeSetTemplate,
     );
 
-    const sizeInputs = screen.getAllByLabelText(/^Nodes \(/);
-    await user.type(sizeInputs[0], '3');
+    await user.type(screen.getByLabelText('Default nodes (workers)'), '3');
+    await user.type(screen.getByLabelText(/^Minimum nodes \(workers/), '1');
+    await user.type(screen.getByLabelText(/^Maximum nodes \(workers/), '5');
 
-    expect(sizeInputs[0]).toHaveValue(3);
+    expect(screen.getByLabelText('Default nodes (workers)')).toHaveValue(3);
+    expect(screen.getByLabelText('workers-min-value')).toHaveTextContent('1');
+    expect(screen.getByLabelText('workers-max-value')).toHaveTextContent('5');
   });
 
   it('shows an error when host types fail to load, falling back to the raw id', () => {
@@ -114,7 +128,7 @@ describe('NodeSetsFieldEditor', () => {
       refetch: vi.fn(),
     } as unknown as ReturnType<typeof hostTypesApi.useHostTypes>);
     renderEditor(
-      { fieldDefinitions: { node_sets: { sizeByKey: {}, editable: true } } },
+      { fieldDefinitions: { node_sets: { entriesByKey: {}, editable: true } } },
       twoNodeSetTemplate,
     );
 
@@ -125,26 +139,12 @@ describe('NodeSetsFieldEditor', () => {
   it('toggles the editable switch', async () => {
     mockHostTypes();
     const { user } = renderEditor(
-      { fieldDefinitions: { node_sets: { sizeByKey: {}, editable: false } } },
+      { fieldDefinitions: { node_sets: { entriesByKey: {}, editable: false } } },
       twoNodeSetTemplate,
     );
 
     await user.click(screen.getByRole('switch', { name: 'Editable' }));
 
     expect(screen.getByLabelText('editable-value')).toHaveTextContent('true');
-  });
-
-  it('updates size min/max constraints in Formik state', async () => {
-    mockHostTypes();
-    const { user } = renderEditor(
-      { fieldDefinitions: { node_sets: { sizeByKey: {}, editable: true } } },
-      twoNodeSetTemplate,
-    );
-
-    await user.type(screen.getByLabelText(/Minimum size/), '1');
-    await user.type(screen.getByLabelText(/Maximum size/), '10');
-
-    expect(screen.getByLabelText('min-value')).toHaveTextContent('1');
-    expect(screen.getByLabelText('max-value')).toHaveTextContent('10');
   });
 });

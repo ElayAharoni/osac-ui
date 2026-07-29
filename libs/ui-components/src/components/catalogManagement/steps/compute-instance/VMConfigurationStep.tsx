@@ -83,9 +83,14 @@ export const VMConfigurationStep = () => {
 
   return (
     <OsacForm>
+      <StringFieldDefinition
+        path="image.source_ref"
+        label={t('Source Ref')}
+        fieldId="image-source-ref"
+      />
       <ResourceSelectorFieldDefinition
         path="instance_type"
-        label={t('Instance Type')}
+        label={t('Instance type')}
         fieldId="instance-type"
         options={instanceTypes.map((instanceType) => ({
           value: instanceType.id,
@@ -93,21 +98,16 @@ export const VMConfigurationStep = () => {
         }))}
         isLoading={instanceTypesLoading}
       />
-      <StringFieldDefinition
-        path="image.source_ref"
-        label={t('Source Ref')}
-        fieldId="image-source-ref"
-      />
       <NumberFieldDefinition
         path="boot_disk.size_gib"
-        label={t('Boot Disk Size (GiB)')}
+        label={t('Boot disk size (GiB)')}
         fieldId="boot-disk-size"
       />
       <AdditionalDisksFieldEditor />
-      <StringFieldDefinition path="run_strategy" label={t('Run Strategy')} fieldId="run-strategy" />
+      <StringFieldDefinition path="run_strategy" label={t('Run strategy')} fieldId="run-strategy" />
       <StringFieldDefinition
         path="user_data"
-        label={t('User Data')}
+        label={t('User data')}
         fieldId="user-data"
         multiline
       />

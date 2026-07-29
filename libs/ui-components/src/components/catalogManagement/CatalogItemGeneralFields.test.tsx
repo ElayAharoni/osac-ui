@@ -3,19 +3,21 @@ import { Formik } from 'formik';
 import { describe, expect, it, vi } from 'vitest';
 
 import { CatalogItemGeneralFields } from './CatalogItemGeneralFields';
+import * as tenantApi from '../../api/v1/private/tenant';
 import * as projectsApi from '../../api/v1/projects';
-import * as tenantApi from '../../api/v1/tenant';
 import { SessionProvider } from '../../hooks/use-session';
 import { renderWithProviders } from '../../test-utils/TestProviders';
 
-vi.mock('../../api/v1/tenant', () => ({ useTenants: vi.fn() }));
+vi.mock('../../api/v1/private/tenant', () => ({ usePrivateTenants: vi.fn() }));
 vi.mock('../../api/v1/projects', () => ({ useProjects: vi.fn() }));
 
 const asQueryResult = <T,>(data: T) =>
-  ({ data, isLoading: false, error: null }) as unknown as ReturnType<typeof tenantApi.useTenants>;
+  ({ data, isLoading: false, error: null }) as unknown as ReturnType<
+    typeof tenantApi.usePrivateTenants
+  >;
 
 const mockLists = () => {
-  vi.mocked(tenantApi.useTenants).mockReturnValue(
+  vi.mocked(tenantApi.usePrivateTenants).mockReturnValue(
     asQueryResult([{ id: 'acme', metadata: { name: 'Acme' } }]),
   );
   vi.mocked(projectsApi.useProjects).mockReturnValue(
@@ -127,13 +129,13 @@ describe('CatalogItemGeneralFields', () => {
     mockLists();
     renderFields('tenantAdmin');
 
-    expect(tenantApi.useTenants).toHaveBeenCalledWith(false);
+    expect(tenantApi.usePrivateTenants).toHaveBeenCalledWith(false);
   });
 
   it('calls the private Tenants API for a CSP Admin', () => {
     mockLists();
     renderFields('providerAdmin');
 
-    expect(tenantApi.useTenants).toHaveBeenCalledWith(true);
+    expect(tenantApi.usePrivateTenants).toHaveBeenCalledWith(true);
   });
 });

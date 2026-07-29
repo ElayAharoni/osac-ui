@@ -16,7 +16,7 @@ import {
   WizardFooterWrapper,
   WizardStep,
 } from '@patternfly/react-core';
-import { FormikProvider, useFormik } from 'formik';
+import { Formik } from 'formik';
 import type { TFunction } from 'i18next';
 import * as Yup from 'yup';
 
@@ -159,36 +159,36 @@ const getFullFormValidationSchema = (t: TFunction, role: ReturnType<typeof useSe
   });
 
 const buildFieldDefinitions = (values: ComputeInstanceCatalogItemFormValues, t: TFunction) => [
-  // instance_type's default is a LabeledResourceRef ({value, label}); flatten to the id before
-  // serializing, the same way `template` is flattened below — otherwise the display label leaks
-  // into the wire payload as a struct instead of a plain string id.
-  buildFieldDefinition('instance_type', t('Instance Type'), {
-    editable: values.fieldDefinitions.instance_type.editable,
-    default: values.fieldDefinitions.instance_type.default.value,
-  }),
   buildFieldDefinition(
     'image.source_ref',
     t('Source Ref'),
     values.fieldDefinitions.image.source_ref,
   ),
+  // instance_type's default is a LabeledResourceRef ({value, label}); flatten to the id before
+  // serializing, the same way `template` is flattened below — otherwise the display label leaks
+  // into the wire payload as a struct instead of a plain string id.
+  buildFieldDefinition('instance_type', t('Instance type'), {
+    editable: values.fieldDefinitions.instance_type.editable,
+    default: values.fieldDefinitions.instance_type.default.value,
+  }),
   buildFieldDefinition(
     'boot_disk.size_gib',
-    t('Boot Disk Size (GiB)'),
+    t('Boot disk size (GiB)'),
     values.fieldDefinitions.boot_disk.size_gib,
   ),
-  buildFieldDefinition('run_strategy', t('Run Strategy'), values.fieldDefinitions.run_strategy),
-  buildFieldDefinition('user_data', t('User Data'), values.fieldDefinitions.user_data),
-  buildFieldDefinition('ssh_key', t('SSH Key'), values.fieldDefinitions.ssh_key),
   ...values.fieldDefinitions.additional_disks.map((disk, index) =>
     buildFieldDefinition(
       `additional_disks.${index}.size_gib`,
-      t('Additional Disk Size (GiB)'),
+      t('Additional disk size (GiB)'),
       disk.size_gib,
     ),
   ),
+  buildFieldDefinition('run_strategy', t('Run strategy'), values.fieldDefinitions.run_strategy),
+  buildFieldDefinition('user_data', t('User data'), values.fieldDefinitions.user_data),
+  buildFieldDefinition('ssh_key', t('SSH public key'), values.fieldDefinitions.ssh_key),
   // Not shown in any wizard step — VM catalog items always allow tenants to configure network
   // attachments at provisioning time.
-  buildFieldDefinition('network_attachments', t('Network Attachments'), {
+  buildFieldDefinition('network_attachments', t('Network attachments'), {
     editable: true,
     default: [],
   }),
@@ -211,35 +211,6 @@ export const ComputeInstanceCatalogItemCreatePage = () => {
     [activeStepId, t, role],
   );
   const fullFormSchema = useMemo(() => getFullFormValidationSchema(t, role), [t, role]);
-
-  const formik = useFormik<ComputeInstanceCatalogItemFormValues>({
-    initialValues,
-    validationSchema,
-    validateOnBlur: true,
-    validateOnChange: false,
-    onSubmit: async (values) => {
-      setSubmitError(undefined);
-      try {
-        const payload: MessageInitShape<typeof ComputeInstanceCatalogItemSchema> = {
-          title: values.title.trim(),
-          description: values.description.trim(),
-          template: values.template.value,
-          published: false,
-          ...buildScopePayloadFields(values.scope, role, values.resourceName),
-          // buildFieldDefinition()'s `default` is a decoded google.protobuf.Value init shape;
-          // MessageInitShape can't structurally verify it against the generated Value type, so
-          // this one property needs a cast (see buildFieldDefinition in fieldDefinitionValue.ts).
-          fieldDefinitions: buildFieldDefinitions(values, t) as MessageInitShape<
-            typeof ComputeInstanceCatalogItemSchema
-          >['fieldDefinitions'],
-        };
-        await createComputeInstanceCatalogItem(payload);
-        navigate('/admin/catalog');
-      } catch (error) {
-        setSubmitError(getErrorMessage(error));
-      }
-    },
-  });
 
   const templateOptions = templates.map((template) => ({
     value: template.id,
@@ -266,59 +237,92 @@ export const ComputeInstanceCatalogItemCreatePage = () => {
           </Content>
         </Stack>
       </PageSection>
-      <FormikProvider value={formik}>
-        <PageSection hasBodyWrapper={false} type={PageSectionTypes.wizard}>
-          <Wizard
-            navAriaLabel={t('Create virtual machine catalog item steps')}
-            isVisitRequired
-            footer={
-              <WizardFooterWrapper>
-                <CatalogItemWizardFooter
-                  formik={formik}
-                  stepIds={STEP_IDS}
-                  onActiveStepIdChange={(id) => setActiveStepId(id as VmStepId)}
-                  fullFormSchema={fullFormSchema}
-                  setValidationAlert={setValidationAlert}
-                  isPending={isPending}
-                />
-              </WizardFooterWrapper>
-            }
-          >
-            {STEP_IDS.map((stepId) => (
-              <WizardStep key={stepId} id={stepId} name={t(STEP_LABEL_KEYS[stepId])}>
-                <FieldValidationProvider value={validationAlert}>
-                  <Stack hasGutter>
-                    {validationAlert ? (
-                      <StackItem>
-                        <Alert
-                          variant="danger"
-                          isInline
-                          title={t('This step has validation errors')}
+      <Formik<ComputeInstanceCatalogItemFormValues>
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        validateOnBlur
+        validateOnChange={false}
+        onSubmit={async (values) => {
+          setSubmitError(undefined);
+          try {
+            const payload: MessageInitShape<typeof ComputeInstanceCatalogItemSchema> = {
+              title: values.title.trim(),
+              description: values.description.trim(),
+              template: values.template.value,
+              published: false,
+              ...buildScopePayloadFields(values.scope, role, values.resourceName),
+              // buildFieldDefinition()'s `default` is a decoded google.protobuf.Value init shape;
+              // MessageInitShape can't structurally verify it against the generated Value type, so
+              // this one property needs a cast (see buildFieldDefinition in fieldDefinitionValue.ts).
+              fieldDefinitions: buildFieldDefinitions(values, t) as MessageInitShape<
+                typeof ComputeInstanceCatalogItemSchema
+              >['fieldDefinitions'],
+            };
+            await createComputeInstanceCatalogItem(payload);
+            navigate('/admin/catalog');
+          } catch (error) {
+            setSubmitError(getErrorMessage(error));
+          }
+        }}
+      >
+        {(formik) => (
+          <PageSection hasBodyWrapper={false} type={PageSectionTypes.wizard}>
+            <Wizard
+              navAriaLabel={t('Create virtual machine catalog item steps')}
+              isVisitRequired
+              footer={
+                <WizardFooterWrapper>
+                  <CatalogItemWizardFooter
+                    formik={formik}
+                    stepIds={STEP_IDS}
+                    onActiveStepIdChange={(id) => setActiveStepId(id as VmStepId)}
+                    fullFormSchema={fullFormSchema}
+                    setValidationAlert={setValidationAlert}
+                    isPending={isPending}
+                  />
+                </WizardFooterWrapper>
+              }
+            >
+              {STEP_IDS.map((stepId) => (
+                <WizardStep key={stepId} id={stepId} name={t(STEP_LABEL_KEYS[stepId])}>
+                  <FieldValidationProvider value={validationAlert}>
+                    <Stack hasGutter>
+                      {validationAlert ? (
+                        <StackItem>
+                          <Alert
+                            variant="danger"
+                            isInline
+                            title={t('This step has validation errors')}
+                          />
+                        </StackItem>
+                      ) : null}
+                      {submitError ? (
+                        <StackItem>
+                          <Alert
+                            variant="danger"
+                            isInline
+                            title={t('Could not create catalog item')}
+                          >
+                            {submitError}
+                          </Alert>
+                        </StackItem>
+                      ) : null}
+                      {stepId === 'general' ? (
+                        <CatalogItemGeneralFields
+                          templates={templateOptions}
+                          templatesLoading={templatesLoading}
                         />
-                      </StackItem>
-                    ) : null}
-                    {submitError ? (
-                      <StackItem>
-                        <Alert variant="danger" isInline title={t('Could not create catalog item')}>
-                          {submitError}
-                        </Alert>
-                      </StackItem>
-                    ) : null}
-                    {stepId === 'general' ? (
-                      <CatalogItemGeneralFields
-                        templates={templateOptions}
-                        templatesLoading={templatesLoading}
-                      />
-                    ) : null}
-                    {stepId === 'configuration' ? <VMConfigurationStep /> : null}
-                    {stepId === 'access' ? <VMAccessStep /> : null}
-                  </Stack>
-                </FieldValidationProvider>
-              </WizardStep>
-            ))}
-          </Wizard>
-        </PageSection>
-      </FormikProvider>
+                      ) : null}
+                      {stepId === 'configuration' ? <VMConfigurationStep /> : null}
+                      {stepId === 'access' ? <VMAccessStep /> : null}
+                    </Stack>
+                  </FieldValidationProvider>
+                </WizardStep>
+              ))}
+            </Wizard>
+          </PageSection>
+        )}
+      </Formik>
     </>
   );
 };
