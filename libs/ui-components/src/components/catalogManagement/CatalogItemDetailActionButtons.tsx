@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Button, Flex, FlexItem, Tooltip } from '@patternfly/react-core';
+import { Button, Flex, FlexItem } from '@patternfly/react-core';
 import PencilAltIcon from '@patternfly/react-icons/dist/esm/icons/pencil-alt-icon';
 import TrashIcon from '@patternfly/react-icons/dist/esm/icons/trash-icon';
 
@@ -7,6 +7,7 @@ import CatalogItemPublishToggle from './CatalogItemPublishToggle';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { DemoShellRole } from '../../shellTypes';
 import { type CatalogItem, catalogItemScope } from '../catalog/catalogItemDisplay';
+import WithTooltip from '../Primitives/WithTooltip';
 
 interface CatalogItemDetailActionButtonsProps {
   catalogItem: CatalogItem;
@@ -45,19 +46,13 @@ const CatalogItemDetailActionButtons = ({
       flexWrap={{ default: 'wrap' }}
     >
       <FlexItem>
-        {isDisabled ? (
-          <Tooltip content={disabledReason}>
-            <span tabIndex={0}>
-              <CatalogItemPublishToggle
-                published={catalogItem.published}
-                onChange={onTogglePublish}
-                isDisabled
-              />
-            </span>
-          </Tooltip>
-        ) : (
-          <CatalogItemPublishToggle published={catalogItem.published} onChange={onTogglePublish} />
-        )}
+        <WithTooltip showTooltip={isDisabled} content={disabledReason} wrapWithSpan>
+          <CatalogItemPublishToggle
+            published={catalogItem.published}
+            onChange={onTogglePublish}
+            isDisabled={isDisabled}
+          />
+        </WithTooltip>
       </FlexItem>
       <FlexItem>
         <Button variant="primary" icon={<PencilAltIcon />} onClick={() => navigate(editHref)}>
@@ -65,17 +60,16 @@ const CatalogItemDetailActionButtons = ({
         </Button>
       </FlexItem>
       <FlexItem>
-        {isDisabled ? (
-          <Tooltip content={disabledReason}>
-            <Button variant="danger" icon={<TrashIcon />} isAriaDisabled onClick={onDeleteClick}>
-              {t('Delete')}
-            </Button>
-          </Tooltip>
-        ) : (
-          <Button variant="danger" icon={<TrashIcon />} onClick={onDeleteClick}>
+        <WithTooltip showTooltip={isDisabled} content={disabledReason}>
+          <Button
+            variant="danger"
+            icon={<TrashIcon />}
+            isAriaDisabled={isDisabled}
+            onClick={onDeleteClick}
+          >
             {t('Delete')}
           </Button>
-        )}
+        </WithTooltip>
       </FlexItem>
     </Flex>
   );
