@@ -48,7 +48,8 @@ const CatalogItemOverviewTab = ({
   templateName,
 }: CatalogItemOverviewTabProps) => {
   const { t } = useTranslation();
-  const description = catalogItem.description?.trim();
+  const description = catalogItem.description;
+  const hasDescription = Boolean(description?.trim());
 
   return (
     <Card>
@@ -63,7 +64,11 @@ const CatalogItemOverviewTab = ({
           <DescriptionListGroup>
             <DescriptionListTerm>{t('Description')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {description ? <SanitizedMarkdown>{description}</SanitizedMarkdown> : displayValue()}
+              {hasDescription && description ? (
+                <SanitizedMarkdown>{description}</SanitizedMarkdown>
+              ) : (
+                displayValue()
+              )}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>

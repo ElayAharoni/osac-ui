@@ -58,6 +58,16 @@ describe('CatalogItemOverviewTab', () => {
     expect(screen.getByText('standard').tagName).toBe('STRONG');
   });
 
+  it('preserves a leading indented code block in the description', () => {
+    const { container } = renderWithProviders(
+      <CatalogItemOverviewTab
+        catalogItem={{ ...baseItem, description: '    codeBlockLine' }}
+        role="tenantAdmin"
+      />,
+    );
+    expect(container.querySelector('pre code')).toHaveTextContent('codeBlockLine');
+  });
+
   it('renders a fallback when description is empty', () => {
     renderWithProviders(
       <CatalogItemOverviewTab
