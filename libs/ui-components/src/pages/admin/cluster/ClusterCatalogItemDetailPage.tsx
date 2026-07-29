@@ -5,23 +5,26 @@ import { useClusterTemplate } from '../../../api/v1/cluster-templates';
 import { usePrivateClusterCatalogItem } from '../../../api/v1/private/cluster-catalog-item';
 import { useSession } from '../../../hooks/use-session';
 import CatalogItemDetailPageShell from '../CatalogItemDetailPageShell';
+import { useCatalogItemDetailData } from '../useCatalogItemDetailData';
 
 const ClusterCatalogItemDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { role } = useSession();
-  const isProviderAdmin = role === 'providerAdmin';
 
-  const publicResult = useClusterCatalogItem(!isProviderAdmin ? id : undefined);
-  const privateResult = usePrivateClusterCatalogItem(isProviderAdmin ? id : undefined);
   const {
     data: catalogItem,
     isLoading,
     isError,
     error,
     refetch,
-  } = isProviderAdmin ? privateResult : publicResult;
-
-  const { data: template } = useClusterTemplate(catalogItem?.template);
+    template,
+  } = useCatalogItemDetailData({
+    id,
+    role,
+    usePublicItem: useClusterCatalogItem,
+    usePrivateItem: usePrivateClusterCatalogItem,
+    useTemplate: useClusterTemplate,
+  });
 
   return (
     <CatalogItemDetailPageShell

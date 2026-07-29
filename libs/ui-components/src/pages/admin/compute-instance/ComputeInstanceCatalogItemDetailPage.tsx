@@ -5,23 +5,26 @@ import { useComputeInstanceTemplate } from '../../../api/v1/compute-instance-tem
 import { usePrivateComputeInstanceCatalogItem } from '../../../api/v1/private/compute-instance-catalog-item';
 import { useSession } from '../../../hooks/use-session';
 import CatalogItemDetailPageShell from '../CatalogItemDetailPageShell';
+import { useCatalogItemDetailData } from '../useCatalogItemDetailData';
 
 const ComputeInstanceCatalogItemDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { role } = useSession();
-  const isProviderAdmin = role === 'providerAdmin';
 
-  const publicResult = useComputeInstanceCatalogItem(!isProviderAdmin ? id : undefined);
-  const privateResult = usePrivateComputeInstanceCatalogItem(isProviderAdmin ? id : undefined);
   const {
     data: catalogItem,
     isLoading,
     isError,
     error,
     refetch,
-  } = isProviderAdmin ? privateResult : publicResult;
-
-  const { data: template } = useComputeInstanceTemplate(catalogItem?.template);
+    template,
+  } = useCatalogItemDetailData({
+    id,
+    role,
+    usePublicItem: useComputeInstanceCatalogItem,
+    usePrivateItem: usePrivateComputeInstanceCatalogItem,
+    useTemplate: useComputeInstanceTemplate,
+  });
 
   return (
     <CatalogItemDetailPageShell

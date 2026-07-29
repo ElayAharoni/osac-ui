@@ -5,23 +5,26 @@ import { useBareMetalInstanceTemplate } from '../../../api/v1/baremetal-instance
 import { usePrivateBareMetalInstanceCatalogItem } from '../../../api/v1/private/baremetal-instance-catalog-item';
 import { useSession } from '../../../hooks/use-session';
 import CatalogItemDetailPageShell from '../CatalogItemDetailPageShell';
+import { useCatalogItemDetailData } from '../useCatalogItemDetailData';
 
 const BareMetalInstanceCatalogItemDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { role } = useSession();
-  const isProviderAdmin = role === 'providerAdmin';
 
-  const publicResult = useBareMetalInstanceCatalogItem(!isProviderAdmin ? id : undefined);
-  const privateResult = usePrivateBareMetalInstanceCatalogItem(isProviderAdmin ? id : undefined);
   const {
     data: catalogItem,
     isLoading,
     isError,
     error,
     refetch,
-  } = isProviderAdmin ? privateResult : publicResult;
-
-  const { data: template } = useBareMetalInstanceTemplate(catalogItem?.template);
+    template,
+  } = useCatalogItemDetailData({
+    id,
+    role,
+    usePublicItem: useBareMetalInstanceCatalogItem,
+    usePrivateItem: usePrivateBareMetalInstanceCatalogItem,
+    useTemplate: useBareMetalInstanceTemplate,
+  });
 
   return (
     <CatalogItemDetailPageShell
