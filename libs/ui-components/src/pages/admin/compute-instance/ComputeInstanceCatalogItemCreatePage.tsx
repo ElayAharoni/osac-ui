@@ -75,8 +75,6 @@ interface ComputeInstanceCatalogItemFormValues {
   scope: ScopeValues;
   fieldDefinitions: {
     instance_type: FieldDefinitionValue<LabeledResourceRef>;
-    cores: FieldDefinitionValue<string>;
-    memory_gib: FieldDefinitionValue<string>;
     image: FieldDefinitionValue<string>;
     boot_disk: { size_gib: FieldDefinitionValue<string> };
     additional_disks: AdditionalDiskEntry[];
@@ -97,8 +95,6 @@ const createInitialValues = (
   scope: initialScopeForRole(role),
   fieldDefinitions: {
     instance_type: { editable: true, default: EMPTY_LABELED_RESOURCE_REF },
-    cores: { editable: true, default: '' },
-    memory_gib: { editable: true, default: '' },
     image: { editable: true, default: '' },
     boot_disk: { size_gib: { editable: true, default: '' } },
     additional_disks: [],
@@ -138,8 +134,6 @@ const getStepValidationSchema = (
       return Yup.object({
         fieldDefinitions: Yup.object({
           instance_type: instanceTypeFieldDefinitionSchema(t),
-          cores: fieldDefinitionValueSchema(t),
-          memory_gib: fieldDefinitionValueSchema(t),
           boot_disk: Yup.object({ size_gib: fieldDefinitionValueSchema(t) }),
           additional_disks: Yup.array().of(Yup.object({ size_gib: fieldDefinitionValueSchema(t) })),
         }),
@@ -160,8 +154,6 @@ const getFullFormValidationSchema = (t: TFunction, role: ReturnType<typeof useSe
     scope: scopeValidationSchema(t, role),
     fieldDefinitions: Yup.object({
       instance_type: instanceTypeFieldDefinitionSchema(t),
-      cores: fieldDefinitionValueSchema(t),
-      memory_gib: fieldDefinitionValueSchema(t),
       additional_disks: Yup.array().of(Yup.object({ size_gib: fieldDefinitionValueSchema(t) })),
       boot_disk: Yup.object({ size_gib: fieldDefinitionValueSchema(t) }),
       ssh_key: fieldDefinitionValueSchema(t),
@@ -176,8 +168,6 @@ const buildFieldDefinitions = (values: ComputeInstanceCatalogItemFormValues, t: 
     editable: values.fieldDefinitions.instance_type.editable,
     default: values.fieldDefinitions.instance_type.default.value,
   }),
-  buildFieldDefinition('cores', t('Cores'), values.fieldDefinitions.cores),
-  buildFieldDefinition('memory_gib', t('Memory (GiB)'), values.fieldDefinitions.memory_gib),
   buildFieldDefinition('image', t('Image'), values.fieldDefinitions.image),
   buildFieldDefinition(
     'boot_disk.size_gib',

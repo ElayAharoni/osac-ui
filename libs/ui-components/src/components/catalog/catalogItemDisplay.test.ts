@@ -82,34 +82,6 @@ describe('catalog display with wire field_definitions', () => {
       fieldDefinitions: [
         {
           $typeName: 'osac.public.v1.FieldDefinition',
-          path: 'cores',
-          displayName: 'vCPUs',
-          editable: true,
-          default: {
-            $typeName: 'google.protobuf.Value',
-            kind: {
-              case: 'numberValue',
-              value: 4,
-            },
-          },
-          validationSchema: '',
-        },
-        {
-          $typeName: 'osac.public.v1.FieldDefinition',
-          path: 'memory_gib',
-          displayName: 'RAM (GiB)',
-          editable: true,
-          default: {
-            $typeName: 'google.protobuf.Value',
-            kind: {
-              case: 'numberValue',
-              value: 8,
-            },
-          },
-          validationSchema: '',
-        },
-        {
-          $typeName: 'osac.public.v1.FieldDefinition',
           path: 'boot_disk.size_gib',
           displayName: 'Boot disk (GiB)',
           editable: true,
@@ -125,12 +97,8 @@ describe('catalog display with wire field_definitions', () => {
       ],
     };
 
-    expect(catalogItemResourceParts(wireItem)).toEqual([
-      '4 vCPUs',
-      '8 RAM (GiB)',
-      '40 Boot disk (GiB)',
-    ]);
-    expect(catalogItemResourceLine(wireItem)).toBe('4 vCPUs · 8 RAM (GiB) · 40 Boot disk (GiB)');
+    expect(catalogItemResourceParts(wireItem)).toEqual(['40 Boot disk (GiB)']);
+    expect(catalogItemResourceLine(wireItem)).toBe('40 Boot disk (GiB)');
   });
 
   it('renders node set resource summary from cluster catalog item JSON', () => {

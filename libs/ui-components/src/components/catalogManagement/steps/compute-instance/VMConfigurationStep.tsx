@@ -94,8 +94,6 @@ export const VMConfigurationStep = () => {
         }))}
         isLoading={instanceTypesLoading}
       />
-      <NumberFieldDefinition path="cores" label={t('Cores')} fieldId="cores" />
-      <NumberFieldDefinition path="memory_gib" label={t('Memory (GiB)')} fieldId="memory-gib" />
       <StringFieldDefinition path="image" label={t('Image')} fieldId="image" />
       <NumberFieldDefinition
         path="boot_disk.size_gib"

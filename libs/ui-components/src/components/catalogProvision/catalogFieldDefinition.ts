@@ -141,12 +141,9 @@ export const catalogItemFieldDefinitions = (item: unknown): CatalogFieldDefiniti
   return coerceCatalogFieldDefinitions(readCatalogItemFieldDefinitions(item));
 };
 
-/** Spec paths shown on catalog cards as compute resources (CPU, memory, boot disk). */
-export const CATALOG_ITEM_RESOURCE_FIELD_PATHS = [
-  'cores',
-  'memory_gib',
-  'boot_disk.size_gib',
-] as const;
+/** Spec paths shown on catalog cards as compute resources. CPU/memory are implied by the selected
+ * instance_type rather than being independently configurable field definitions. */
+export const CATALOG_ITEM_RESOURCE_FIELD_PATHS = ['boot_disk.size_gib'] as const;
 
 export type CatalogItemResourceFieldPath = (typeof CATALOG_ITEM_RESOURCE_FIELD_PATHS)[number];
 

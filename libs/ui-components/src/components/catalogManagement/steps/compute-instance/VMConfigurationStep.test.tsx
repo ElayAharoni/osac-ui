@@ -12,8 +12,6 @@ vi.mock('../../../../api/v1/instance-types', () => ({ useInstanceTypes: vi.fn() 
 const initialValues = {
   fieldDefinitions: {
     instance_type: { editable: false, default: { value: '', label: '' } },
-    cores: { editable: false, default: '' },
-    memory_gib: { editable: false, default: '' },
     image: { editable: false, default: '' },
     boot_disk: { size_gib: { editable: false, default: '' } },
     additional_disks: [] as { rowId: string; sizeGib: string }[],
@@ -38,8 +36,6 @@ describe('VMConfigurationStep', () => {
     );
 
     expect(screen.getByText('Instance Type')).toBeInTheDocument();
-    expect(screen.getByText('Cores')).toBeInTheDocument();
-    expect(screen.getByText('Memory (GiB)')).toBeInTheDocument();
     expect(screen.getByText('Image')).toBeInTheDocument();
     expect(screen.getByText('Boot Disk Size (GiB)')).toBeInTheDocument();
     expect(screen.getByText('Run Strategy')).toBeInTheDocument();
