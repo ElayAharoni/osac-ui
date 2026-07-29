@@ -21,7 +21,6 @@ describe('CatalogItemDetailPageShell', () => {
     renderWithProviders(
       <CatalogItemDetailPageShell
         catalogItem={undefined}
-        kind="cluster"
         role="tenantAdmin"
         isLoading
         isError={false}
@@ -38,7 +37,6 @@ describe('CatalogItemDetailPageShell', () => {
     renderWithProviders(
       <CatalogItemDetailPageShell
         catalogItem={undefined}
-        kind="cluster"
         role="tenantAdmin"
         isLoading={false}
         isError
@@ -54,7 +52,6 @@ describe('CatalogItemDetailPageShell', () => {
     renderWithProviders(
       <CatalogItemDetailPageShell
         catalogItem={undefined}
-        kind="cluster"
         role="tenantAdmin"
         isLoading={false}
         isError={false}
@@ -70,7 +67,6 @@ describe('CatalogItemDetailPageShell', () => {
     renderWithProviders(
       <CatalogItemDetailPageShell
         catalogItem={catalogItem}
-        kind="cluster"
         role="tenantAdmin"
         templateName="OpenShift 4 Template"
         isLoading={false}

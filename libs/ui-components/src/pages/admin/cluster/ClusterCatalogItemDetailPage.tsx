@@ -26,7 +26,6 @@ const ClusterCatalogItemDetailPage = () => {
   return (
     <CatalogItemDetailPageShell
       catalogItem={catalogItem}
-      kind="cluster"
       role={role}
       templateName={template?.title ?? catalogItem?.template}
       isLoading={isLoading}

@@ -12,12 +12,14 @@ import {
   Tabs,
 } from '@patternfly/react-core';
 
+import BareMetalInstanceProvisionedResourcesTab from './BareMetalInstanceProvisionedResourcesTab';
 import CatalogItemDetailActionButtons from './CatalogItemDetailActionButtons';
+import { catalogItemDetailKind } from './catalogItemDetailKind';
 import CatalogItemFieldDefinitionsTab from './CatalogItemFieldDefinitionsTab';
 import CatalogItemOverviewTab from './CatalogItemOverviewTab';
-import type { CatalogItemDetailKind } from './CatalogItemProvisionedResourcesTab';
-import CatalogItemProvisionedResourcesTab from './CatalogItemProvisionedResourcesTab';
 import CatalogItemStatusLabel from './CatalogItemStatusLabel';
+import ClusterProvisionedResourcesTab from './ClusterProvisionedResourcesTab';
+import ComputeInstanceProvisionedResourcesTab from './ComputeInstanceProvisionedResourcesTab';
 import { useTranslation } from '../../hooks/useTranslation';
 import type { DemoShellRole } from '../../shellTypes';
 import type { CatalogItem } from '../catalog/catalogItemDisplay';
@@ -25,7 +27,6 @@ import { ResourceDetailHeader } from '../Resource/ResourceDetailHeader';
 
 interface CatalogItemDetailsProps {
   catalogItem: CatalogItem;
-  kind: CatalogItemDetailKind;
   role: DemoShellRole;
   templateName?: string;
 }
@@ -34,9 +35,10 @@ const OVERVIEW_TAB_ID = 'catalog-item-detail-tab-overview';
 const FIELD_DEFINITIONS_TAB_ID = 'catalog-item-detail-tab-field-definitions';
 const PROVISIONED_RESOURCES_TAB_ID = 'catalog-item-detail-tab-provisioned-resources';
 
-const CatalogItemDetails = ({ catalogItem, kind, role, templateName }: CatalogItemDetailsProps) => {
+const CatalogItemDetails = ({ catalogItem, role, templateName }: CatalogItemDetailsProps) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState(0);
+  const kind = catalogItemDetailKind(catalogItem);
   const editHref = `/admin/catalog/${kind}/${catalogItem.id}/edit`;
 
   return (
@@ -128,7 +130,15 @@ const CatalogItemDetails = ({ catalogItem, kind, role, templateName }: CatalogIt
           hidden={activeTab !== 2}
         >
           <TabContentBody>
-            <CatalogItemProvisionedResourcesTab catalogItemId={catalogItem.id} kind={kind} />
+            {kind === 'cluster' && (
+              <ClusterProvisionedResourcesTab catalogItemId={catalogItem.id} />
+            )}
+            {kind === 'compute-instance' && (
+              <ComputeInstanceProvisionedResourcesTab catalogItemId={catalogItem.id} />
+            )}
+            {kind === 'baremetal-instance' && (
+              <BareMetalInstanceProvisionedResourcesTab catalogItemId={catalogItem.id} />
+            )}
           </TabContentBody>
         </TabContent>
       </PageSection>

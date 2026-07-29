@@ -26,7 +26,6 @@ const ComputeInstanceCatalogItemDetailPage = () => {
   return (
     <CatalogItemDetailPageShell
       catalogItem={catalogItem}
-      kind="compute-instance"
       role={role}
       templateName={template?.title ?? catalogItem?.template}
       isLoading={isLoading}

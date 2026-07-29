@@ -26,7 +26,6 @@ const BareMetalInstanceCatalogItemDetailPage = () => {
   return (
     <CatalogItemDetailPageShell
       catalogItem={catalogItem}
-      kind="baremetal-instance"
       role={role}
       templateName={template?.title ?? catalogItem?.template}
       isLoading={isLoading}

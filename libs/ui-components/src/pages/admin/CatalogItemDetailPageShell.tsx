@@ -1,6 +1,5 @@
 import type { CatalogItem } from '../../components/catalog/catalogItemDisplay';
 import CatalogItemDetails from '../../components/catalogManagement/CatalogItemDetails';
-import type { CatalogItemDetailKind } from '../../components/catalogManagement/CatalogItemProvisionedResourcesTab';
 import { ResourceDetailsPageError } from '../../components/Resource/ResourceDetailsPageError';
 import { ResourceDetailsPageLoading } from '../../components/Resource/ResourceDetailsPageLoading';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -8,7 +7,6 @@ import type { DemoShellRole } from '../../shellTypes';
 
 interface CatalogItemDetailPageShellProps {
   catalogItem: CatalogItem | undefined;
-  kind: CatalogItemDetailKind;
   role: DemoShellRole;
   templateName?: string;
   isLoading: boolean;
@@ -21,7 +19,6 @@ interface CatalogItemDetailPageShellProps {
  * pages — each page owns its own role-based hook selection, then delegates rendering here. */
 const CatalogItemDetailPageShell = ({
   catalogItem,
-  kind,
   role,
   templateName,
   isLoading,
@@ -66,14 +63,7 @@ const CatalogItemDetailPageShell = ({
     );
   }
 
-  return (
-    <CatalogItemDetails
-      catalogItem={catalogItem}
-      kind={kind}
-      role={role}
-      templateName={templateName}
-    />
-  );
+  return <CatalogItemDetails catalogItem={catalogItem} role={role} templateName={templateName} />;
 };
 
 export default CatalogItemDetailPageShell;
