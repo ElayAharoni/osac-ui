@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import {
   Alert,
-  Content,
+  Flex,
+  FlexItem,
   FormFieldGroup,
   FormFieldGroupHeader,
   Stack,
@@ -88,25 +89,40 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
         </StackItem>
       ) : null}
       <StackItem>
-        <SwitchField
-          name={`${NODE_SETS_NAME}.editable`}
-          label={t('Editable')}
-          fieldId="node-sets-editable"
-        />
-      </StackItem>
-      <StackItem>
-        <InputField
-          name={`${NODE_SETS_NAME}.sizeMin`}
-          label={t('Minimum size (optional)')}
-          fieldId="node-sets-size-min"
-          type="number"
-        />
-        <InputField
-          name={`${NODE_SETS_NAME}.sizeMax`}
-          label={t('Maximum size (optional)')}
-          fieldId="node-sets-size-max"
-          type="number"
-        />
+        <FormFieldGroup
+          header={
+            <FormFieldGroupHeader
+              titleText={{ text: t('Size constraints'), id: 'node-sets-constraints-group' }}
+              titleDescription={t(
+                'Applies to every node set below. When editable, tenants can choose a size within these bounds.',
+              )}
+            />
+          }
+        >
+          <SwitchField
+            name={`${NODE_SETS_NAME}.editable`}
+            label={t('Editable')}
+            fieldId="node-sets-editable"
+          />
+          <Flex gap={{ default: 'gapMd' }}>
+            <FlexItem flex={{ default: 'flex_1' }}>
+              <InputField
+                name={`${NODE_SETS_NAME}.sizeMin`}
+                label={t('Minimum size (optional)')}
+                fieldId="node-sets-size-min"
+                type="number"
+              />
+            </FlexItem>
+            <FlexItem flex={{ default: 'flex_1' }}>
+              <InputField
+                name={`${NODE_SETS_NAME}.sizeMax`}
+                label={t('Maximum size (optional)')}
+                fieldId="node-sets-size-max"
+                type="number"
+              />
+            </FlexItem>
+          </Flex>
+        </FormFieldGroup>
       </StackItem>
       {templateNodeSetKeys.map((key) => {
         const hostTypeId = template.nodeSets[key]?.hostType ?? '';
@@ -116,12 +132,12 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
               header={
                 <FormFieldGroupHeader
                   titleText={{ text: t('Node set: {{key}}', { key }), id: `node-set-group-${key}` }}
+                  titleDescription={t('Host type: {{hostType}}', {
+                    hostType: hostTypeLabel(hostTypeId),
+                  })}
                 />
               }
             >
-              <Content component="p">
-                {t('Host type: {{hostType}}', { hostType: hostTypeLabel(hostTypeId) })}
-              </Content>
               <InputField
                 name={`${NODE_SETS_NAME}.sizeByKey.${key}`}
                 label={t('Nodes ({{key}})', { key })}
