@@ -2,11 +2,23 @@ import { Route, Routes } from 'react-router-dom';
 import { screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ClusterCatalogItem } from '@osac/types';
+import type { ClusterCatalogItem, Metadata } from '@osac/types';
 import type { ClusterCatalogItem as PrivateClusterCatalogItem } from '@osac/types/private';
 
 import CatalogItemDetailActionButtons from './CatalogItemDetailActionButtons';
 import { renderWithProviders } from '../../test-utils/TestProviders';
+
+const publicMetadata = (overrides: Partial<Metadata> = {}): Metadata => ({
+  $typeName: 'osac.public.v1.Metadata',
+  name: 'catalog-1',
+  annotations: {},
+  creator: 'test-user',
+  labels: {},
+  project: '',
+  tenant: '',
+  version: 1,
+  ...overrides,
+});
 
 const publicItem = (overrides: Partial<ClusterCatalogItem> = {}): ClusterCatalogItem => ({
   $typeName: 'osac.public.v1.ClusterCatalogItem',
@@ -69,7 +81,7 @@ describe('CatalogItemDetailActionButtons', () => {
   it('renders all actions for tenantAdmin on an organization-scoped item', () => {
     renderWithProviders(
       <CatalogItemDetailActionButtons
-        catalogItem={publicItem({ metadata: { tenant: 'acme-corp' } as never })}
+        catalogItem={publicItem({ metadata: publicMetadata({ tenant: 'acme-corp' }) })}
         role="tenantAdmin"
         editHref="/admin/catalog/cluster/catalog-1/edit"
         onDeleteClick={vi.fn()}
@@ -85,7 +97,7 @@ describe('CatalogItemDetailActionButtons', () => {
   it('renders all actions for tenantAdmin on a project-scoped item', () => {
     renderWithProviders(
       <CatalogItemDetailActionButtons
-        catalogItem={publicItem({ metadata: { project: 'frontend' } as never })}
+        catalogItem={publicItem({ metadata: publicMetadata({ project: 'frontend' }) })}
         role="tenantAdmin"
         editHref="/admin/catalog/cluster/catalog-1/edit"
         onDeleteClick={vi.fn()}
