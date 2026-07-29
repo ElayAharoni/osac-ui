@@ -62,12 +62,12 @@ const renderFields = (role: 'providerAdmin' | 'tenantAdmin') =>
   );
 
 describe('CatalogItemGeneralFields', () => {
-  it('renders Display name, Resource name, Description, and Template fields', () => {
+  it('renders Title, Name, Description, and Template fields', () => {
     mockLists();
     renderFields('providerAdmin');
 
-    expect(screen.getByLabelText(/^Display name/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Resource name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Title/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Name/)).toBeInTheDocument();
     expect(screen.getByLabelText('Description')).toBeInTheDocument();
     expect(screen.getByLabelText(/^Template/)).toBeInTheDocument();
   });

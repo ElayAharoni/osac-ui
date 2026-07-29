@@ -95,7 +95,7 @@ const getStepValidationSchema = (
   switch (stepId) {
     case 'general':
       return Yup.object({
-        title: Yup.string().required(t('Display name is required')),
+        title: Yup.string(),
         resourceName: buildMetadataNameSchema(t),
         template: templateRequiredSchema(t),
         scope: scopeValidationSchema(t, role),
@@ -117,7 +117,7 @@ const getStepValidationSchema = (
 // Validated once, in full, before the final submit — see CatalogItemWizardFooter.
 const getFullFormValidationSchema = (t: TFunction, role: ReturnType<typeof useSession>['role']) =>
   Yup.object({
-    title: Yup.string().required(t('Display name is required')),
+    title: Yup.string(),
     resourceName: buildMetadataNameSchema(t),
     template: templateRequiredSchema(t),
     scope: scopeValidationSchema(t, role),

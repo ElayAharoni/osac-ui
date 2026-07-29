@@ -37,8 +37,8 @@ const fillNames = async (
   title: string,
   resourceName: string,
 ) => {
-  await user.type(screen.getByLabelText(/^Display name/), title);
-  await user.type(screen.getByLabelText(/^Resource name/), resourceName);
+  await user.type(screen.getByLabelText(/^Title/), title);
+  await user.type(screen.getByLabelText(/^Name/), resourceName);
 };
 
 const createFn = vi.fn(() => ({ object: { id: 'new-id', title: 'My Bare Metal' } }));
@@ -68,8 +68,8 @@ describe('BareMetalInstanceCatalogItemCreatePage', () => {
     expect(
       screen.getByRole('heading', { name: 'Create bare metal catalog item' }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Display name/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Resource name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Title/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Name/)).toBeInTheDocument();
     expect(screen.getAllByText('General').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Configuration').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Access').length).toBeGreaterThan(0);

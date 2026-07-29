@@ -48,8 +48,8 @@ const fillNames = async (
   title: string,
   resourceName: string,
 ) => {
-  await user.type(screen.getByLabelText(/^Display name/), title);
-  await user.type(screen.getByLabelText(/^Resource name/), resourceName);
+  await user.type(screen.getByLabelText(/^Title/), title);
+  await user.type(screen.getByLabelText(/^Name/), resourceName);
 };
 
 const fillFirstNodeSet = async (user: ReturnType<typeof renderPage>['user']) => {
@@ -91,8 +91,8 @@ describe('ClusterCatalogItemCreatePage', () => {
     expect(
       screen.getByRole('heading', { name: 'Create cluster catalog item' }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Display name/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Resource name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Title/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Name/)).toBeInTheDocument();
     expect(screen.getAllByText('General').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Configuration').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Networking').length).toBeGreaterThan(0);
@@ -106,6 +106,17 @@ describe('ClusterCatalogItemCreatePage', () => {
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
     expect(await screen.findByText('This step has validation errors')).toBeInTheDocument();
+  });
+
+  it('allows advancing past General with no Title, since only Name is required', async () => {
+    mockSharedData();
+    const { user } = renderPage();
+
+    await user.type(screen.getByLabelText(/^Name/), 'my-cluster');
+    await selectTemplate(user);
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(screen.queryByText('This step has validation errors')).not.toBeInTheDocument();
   });
 
   it('blocks advancing past General when no template is selected', async () => {
