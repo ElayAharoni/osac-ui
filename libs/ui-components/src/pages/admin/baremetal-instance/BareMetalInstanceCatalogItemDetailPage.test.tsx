@@ -19,10 +19,15 @@ vi.mock('../../../api/v1/baremetal-instance', async (importOriginal) => {
 vi.mock('../../../api/v1/private/baremetal-instance-catalog-item', () => ({
   usePrivateBareMetalInstanceCatalogItem: vi.fn(),
 }));
+vi.mock('../../../api/v1/baremetal-instance-templates', () => ({
+  useBareMetalInstanceTemplate: vi.fn(),
+}));
 
 const { useBareMetalInstanceCatalogItem } = await import('../../../api/v1/baremetal-instance');
 const { usePrivateBareMetalInstanceCatalogItem } =
   await import('../../../api/v1/private/baremetal-instance-catalog-item');
+const { useBareMetalInstanceTemplate } =
+  await import('../../../api/v1/baremetal-instance-templates');
 
 const BareMetalInstanceCatalogItemDetailPage = (
   await import('./BareMetalInstanceCatalogItemDetailPage')
@@ -72,6 +77,9 @@ describe('BareMetalInstanceCatalogItemDetailPage', () => {
         typeof usePrivateBareMetalInstanceCatalogItem
       >,
     );
+    vi.mocked(useBareMetalInstanceTemplate).mockReturnValue(
+      mockQueryResult({ data: undefined }) as ReturnType<typeof useBareMetalInstanceTemplate>,
+    );
   });
 
   it('renders the public catalog item for tenantAdmin', async () => {
@@ -81,6 +89,25 @@ describe('BareMetalInstanceCatalogItemDetailPage', () => {
     });
     expect(usePrivateBareMetalInstanceCatalogItem).toHaveBeenCalledWith(undefined);
     expect(useBareMetalInstanceCatalogItem).toHaveBeenCalledWith('catalog-1');
+  });
+
+  it('resolves and displays the template title when available', async () => {
+    vi.mocked(useBareMetalInstanceTemplate).mockReturnValue(
+      mockQueryResult({
+        data: {
+          $typeName: 'osac.public.v1.BareMetalInstanceTemplate',
+          id: 'tpl-bm-worker',
+          title: 'Bare Metal Worker Template',
+          description: '',
+          parameters: [],
+        },
+      }) as ReturnType<typeof useBareMetalInstanceTemplate>,
+    );
+    renderPage('tenantAdmin');
+    await waitFor(() => {
+      expect(screen.getByText('Bare Metal Worker Template')).toBeInTheDocument();
+    });
+    expect(useBareMetalInstanceTemplate).toHaveBeenCalledWith('tpl-bm-worker');
   });
 
   it('renders the private catalog item for providerAdmin', async () => {

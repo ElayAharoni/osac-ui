@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 
 import { useBareMetalInstanceCatalogItem } from '../../../api/v1/baremetal-instance';
+import { useBareMetalInstanceTemplate } from '../../../api/v1/baremetal-instance-templates';
 import { usePrivateBareMetalInstanceCatalogItem } from '../../../api/v1/private/baremetal-instance-catalog-item';
 import CatalogItemDetails from '../../../components/catalogManagement/CatalogItemDetails';
 import { ResourceDetailsPageError } from '../../../components/Resource/ResourceDetailsPageError';
@@ -23,6 +24,8 @@ const BareMetalInstanceCatalogItemDetailPage = () => {
     error,
     refetch,
   } = isProviderAdmin ? privateResult : publicResult;
+
+  const { data: template } = useBareMetalInstanceTemplate(catalogItem?.template);
 
   if (isLoading) {
     return (
@@ -64,7 +67,7 @@ const BareMetalInstanceCatalogItemDetailPage = () => {
       catalogItem={catalogItem}
       kind="baremetal-instance"
       role={role}
-      templateName={catalogItem.template}
+      templateName={template?.title ?? catalogItem.template}
     />
   );
 };

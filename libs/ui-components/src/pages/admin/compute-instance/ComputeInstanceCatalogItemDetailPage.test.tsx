@@ -15,11 +15,15 @@ vi.mock('../../../api/v1/compute-instance-catalog-item', () => ({
 vi.mock('../../../api/v1/private/compute-instance-catalog-item', () => ({
   usePrivateComputeInstanceCatalogItem: vi.fn(),
 }));
+vi.mock('../../../api/v1/compute-instance-templates', () => ({
+  useComputeInstanceTemplate: vi.fn(),
+}));
 
 const { useComputeInstanceCatalogItem } =
   await import('../../../api/v1/compute-instance-catalog-item');
 const { usePrivateComputeInstanceCatalogItem } =
   await import('../../../api/v1/private/compute-instance-catalog-item');
+const { useComputeInstanceTemplate } = await import('../../../api/v1/compute-instance-templates');
 
 const ComputeInstanceCatalogItemDetailPage = (
   await import('./ComputeInstanceCatalogItemDetailPage')
@@ -69,6 +73,9 @@ describe('ComputeInstanceCatalogItemDetailPage', () => {
         typeof usePrivateComputeInstanceCatalogItem
       >,
     );
+    vi.mocked(useComputeInstanceTemplate).mockReturnValue(
+      mockQueryResult({ data: undefined }) as ReturnType<typeof useComputeInstanceTemplate>,
+    );
   });
 
   it('renders the public catalog item for tenantAdmin', async () => {
@@ -78,6 +85,25 @@ describe('ComputeInstanceCatalogItemDetailPage', () => {
     });
     expect(usePrivateComputeInstanceCatalogItem).toHaveBeenCalledWith(undefined);
     expect(useComputeInstanceCatalogItem).toHaveBeenCalledWith('catalog-1');
+  });
+
+  it('resolves and displays the template title when available', async () => {
+    vi.mocked(useComputeInstanceTemplate).mockReturnValue(
+      mockQueryResult({
+        data: {
+          $typeName: 'osac.public.v1.ComputeInstanceTemplate',
+          id: 'tpl-rhel-9',
+          title: 'RHEL 9 Template',
+          description: '',
+          parameters: [],
+        },
+      }) as ReturnType<typeof useComputeInstanceTemplate>,
+    );
+    renderPage('tenantAdmin');
+    await waitFor(() => {
+      expect(screen.getByText('RHEL 9 Template')).toBeInTheDocument();
+    });
+    expect(useComputeInstanceTemplate).toHaveBeenCalledWith('tpl-rhel-9');
   });
 
   it('renders the private catalog item for providerAdmin', async () => {

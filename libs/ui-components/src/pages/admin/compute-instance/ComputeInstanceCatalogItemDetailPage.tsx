@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 
 import { useComputeInstanceCatalogItem } from '../../../api/v1/compute-instance-catalog-item';
+import { useComputeInstanceTemplate } from '../../../api/v1/compute-instance-templates';
 import { usePrivateComputeInstanceCatalogItem } from '../../../api/v1/private/compute-instance-catalog-item';
 import CatalogItemDetails from '../../../components/catalogManagement/CatalogItemDetails';
 import { ResourceDetailsPageError } from '../../../components/Resource/ResourceDetailsPageError';
@@ -23,6 +24,8 @@ const ComputeInstanceCatalogItemDetailPage = () => {
     error,
     refetch,
   } = isProviderAdmin ? privateResult : publicResult;
+
+  const { data: template } = useComputeInstanceTemplate(catalogItem?.template);
 
   if (isLoading) {
     return (
@@ -64,7 +67,7 @@ const ComputeInstanceCatalogItemDetailPage = () => {
       catalogItem={catalogItem}
       kind="compute-instance"
       role={role}
-      templateName={catalogItem.template}
+      templateName={template?.title ?? catalogItem.template}
     />
   );
 };

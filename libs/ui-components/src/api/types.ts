@@ -22,6 +22,7 @@ export type ApiRoute =
   | 'v1/subnets'
   | 'v1/security_groups'
   | 'v1/baremetal_instance_catalog_items'
+  | 'v1/baremetal_instance_templates'
   | 'v1/baremetal_instances'
   | 'v1/public_ips'
   | 'v1/public_ip_attachments'

@@ -79,6 +79,26 @@ describe('ClusterCatalogItemDetailPage', () => {
     expect(useClusterCatalogItem).toHaveBeenCalledWith('catalog-1');
   });
 
+  it('resolves and displays the template title when available', async () => {
+    vi.mocked(useClusterTemplate).mockReturnValue(
+      mockQueryResult({
+        data: {
+          $typeName: 'osac.public.v1.ClusterTemplate',
+          id: 'tpl-openshift-4',
+          title: 'OpenShift 4 Template',
+          description: '',
+          parameters: [],
+          nodeSets: {},
+        },
+      }) as ReturnType<typeof useClusterTemplate>,
+    );
+    renderPage('tenantAdmin');
+    await waitFor(() => {
+      expect(screen.getByText('OpenShift 4 Template')).toBeInTheDocument();
+    });
+    expect(useClusterTemplate).toHaveBeenCalledWith('tpl-openshift-4');
+  });
+
   it('renders the private catalog item for providerAdmin', async () => {
     renderPage('providerAdmin');
     await waitFor(() => {
