@@ -52,4 +52,19 @@ describe('useComputeInstanceTemplate', () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(getCalled).toBe(false);
   });
+
+  it('does not fetch when id is whitespace-only', async () => {
+    let getCalled = false;
+    const transport = createTestTransport(() => {
+      getCalled = true;
+    });
+
+    renderHookWithProviders(() => useComputeInstanceTemplate('   '), {
+      role: 'tenantAdmin',
+      transport,
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(getCalled).toBe(false);
+  });
 });

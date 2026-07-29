@@ -6,10 +6,11 @@ import { useApiQuery } from '../use-api-query';
 
 export const useComputeInstanceTemplate = (id: string | undefined) => {
   const client = useApiFetch(ComputeInstanceTemplates);
+  const trimmedId = id?.trim() ?? '';
   return useApiQuery({
-    queryKey: apiQueryKey('v1/compute_instance_templates', id ? [id] : undefined),
-    queryFn: () => client.get({ id: id ?? '' }),
+    queryKey: apiQueryKey('v1/compute_instance_templates', trimmedId ? [trimmedId] : undefined),
+    queryFn: () => client.get({ id: trimmedId }),
     select: (data) => data.object,
-    enabled: Boolean(id),
+    enabled: Boolean(trimmedId),
   });
 };
