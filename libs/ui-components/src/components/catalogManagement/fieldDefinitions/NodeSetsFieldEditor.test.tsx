@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { Formik } from 'formik';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -95,8 +95,8 @@ describe('NodeSetsFieldEditor', () => {
       twoNodeSetTemplate,
     );
 
-    expect(screen.getByText('Node set: workers')).toBeInTheDocument();
-    expect(screen.getByText('Node set: masters')).toBeInTheDocument();
+    expect(screen.getByText('Workers')).toBeInTheDocument();
+    expect(screen.getByText('Masters')).toBeInTheDocument();
     expect(screen.getByText('Host type: Small')).toBeInTheDocument();
     expect(screen.getByText('Host type: Large')).toBeInTheDocument();
     // No free-form host type picker or add/remove controls — the template fully determines them.
@@ -111,11 +111,12 @@ describe('NodeSetsFieldEditor', () => {
       twoNodeSetTemplate,
     );
 
-    await user.type(screen.getByLabelText('Default nodes (workers)'), '3');
-    await user.type(screen.getByLabelText(/^Minimum nodes \(workers/), '1');
-    await user.type(screen.getByLabelText(/^Maximum nodes \(workers/), '5');
+    const workersGroup = within(screen.getByRole('group', { name: 'Workers' }));
+    await user.type(workersGroup.getByLabelText('Default nodes'), '3');
+    await user.type(workersGroup.getByLabelText('Minimum nodes'), '1');
+    await user.type(workersGroup.getByLabelText('Maximum nodes'), '5');
 
-    expect(screen.getByLabelText('Default nodes (workers)')).toHaveValue(3);
+    expect(workersGroup.getByLabelText('Default nodes')).toHaveValue(3);
     expect(screen.getByLabelText('workers-min-value')).toHaveTextContent('1');
     expect(screen.getByLabelText('workers-max-value')).toHaveTextContent('5');
   });

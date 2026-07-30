@@ -37,7 +37,7 @@ describe('ClusterConfigurationStep', () => {
     );
 
     expect(screen.getByText('Release image')).toBeInTheDocument();
-    expect(screen.getByText('Node set: workers')).toBeInTheDocument();
+    expect(screen.getByText('Workers')).toBeInTheDocument();
     expect(screen.getByText('Host type: Small')).toBeInTheDocument();
   });
 

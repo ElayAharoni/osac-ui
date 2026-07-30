@@ -5,6 +5,7 @@ import {
   FlexItem,
   FormFieldGroup,
   FormFieldGroupHeader,
+  Label,
   Stack,
   StackItem,
   Title,
@@ -65,6 +66,9 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
     [template],
   );
 
+  // Template node-set keys are free-form (e.g. "workers", "masters") — capitalize for display only.
+  const nodeSetDisplayName = (key: string): string => key.charAt(0).toUpperCase() + key.slice(1);
+
   const hostTypeLabel = (hostTypeId: string): string => {
     if (!hostTypeId) {
       return t('Unknown');
@@ -104,14 +108,16 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
                     titleText={{
                       text: (
                         <Title headingLevel="h5" size="md">
-                          {t('Node set: {{key}}', { key })}
+                          {nodeSetDisplayName(key)}
                         </Title>
                       ),
                       id: `node-set-group-${key}`,
                     }}
-                    titleDescription={t('Host type: {{hostType}}', {
-                      hostType: hostTypeLabel(hostTypeId),
-                    })}
+                    actions={
+                      <Label color="blue">
+                        {t('Host type: {{hostType}}', { hostType: hostTypeLabel(hostTypeId) })}
+                      </Label>
+                    }
                   />
                 }
               >
@@ -119,7 +125,7 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
                   <FlexItem flex={{ default: 'flex_1' }}>
                     <InputField
                       name={`${NODE_SETS_NAME}.entriesByKey.${key}.default`}
-                      label={t('Default nodes ({{key}})', { key })}
+                      label={t('Default nodes')}
                       fieldId={`node-set-default-${key}`}
                       type="number"
                     />
@@ -127,7 +133,7 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
                   <FlexItem flex={{ default: 'flex_1' }}>
                     <InputField
                       name={`${NODE_SETS_NAME}.entriesByKey.${key}.min`}
-                      label={t('Minimum nodes ({{key}}, optional)', { key })}
+                      label={t('Minimum nodes')}
                       fieldId={`node-set-min-${key}`}
                       type="number"
                     />
@@ -135,7 +141,7 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
                   <FlexItem flex={{ default: 'flex_1' }}>
                     <InputField
                       name={`${NODE_SETS_NAME}.entriesByKey.${key}.max`}
-                      label={t('Maximum nodes ({{key}}, optional)', { key })}
+                      label={t('Maximum nodes')}
                       fieldId={`node-set-max-${key}`}
                       type="number"
                     />

@@ -55,7 +55,7 @@ const fillNames = async (
 };
 
 const fillFirstNodeSet = async (user: ReturnType<typeof renderPage>['user']) => {
-  await user.type(screen.getByLabelText(/^Default nodes \(/), '3');
+  await user.type(screen.getByLabelText('Default nodes'), '3');
 };
 
 const createFn = vi.fn(() => ({ object: { id: 'new-id', title: 'My Cluster' } }));
@@ -152,7 +152,7 @@ describe('ClusterCatalogItemCreatePage', () => {
     await selectTemplate(user);
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
-    expect(screen.getByText('Node set: workers')).toBeInTheDocument();
+    expect(screen.getByText('Workers')).toBeInTheDocument();
     expect(screen.getByText('Host type: Small')).toBeInTheDocument();
     expect(screen.queryByLabelText(/^Host type/)).not.toBeInTheDocument();
 
