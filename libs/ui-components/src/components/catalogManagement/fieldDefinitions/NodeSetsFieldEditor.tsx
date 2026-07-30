@@ -5,7 +5,6 @@ import {
   FlexItem,
   FormFieldGroup,
   FormFieldGroupHeader,
-  Label,
   Stack,
   StackItem,
   Title,
@@ -66,9 +65,6 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
     [template],
   );
 
-  // Template node-set keys are free-form (e.g. "workers", "masters") — capitalize for display only.
-  const nodeSetDisplayName = (key: string): string => key.charAt(0).toUpperCase() + key.slice(1);
-
   const hostTypeLabel = (hostTypeId: string): string => {
     if (!hostTypeId) {
       return t('Unknown');
@@ -105,19 +101,17 @@ export const NodeSetsFieldEditor = ({ template }: NodeSetsFieldEditorProps) => {
               <FormFieldGroup
                 header={
                   <FormFieldGroupHeader
+                    // A node set always maps to exactly one host type (fulfillment-service's
+                    // ClusterTemplateNodeSet is "all of them of the same type of host"), so the
+                    // host type alone is the group's identity — no separate key/badge needed.
                     titleText={{
                       text: (
                         <Title headingLevel="h5" size="md">
-                          {nodeSetDisplayName(key)}
+                          {hostTypeLabel(hostTypeId)}
                         </Title>
                       ),
                       id: `node-set-group-${key}`,
                     }}
-                    actions={
-                      <Label color="blue">
-                        {t('Host type: {{hostType}}', { hostType: hostTypeLabel(hostTypeId) })}
-                      </Label>
-                    }
                   />
                 }
               >

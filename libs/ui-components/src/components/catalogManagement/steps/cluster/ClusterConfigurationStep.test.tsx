@@ -37,8 +37,7 @@ describe('ClusterConfigurationStep', () => {
     );
 
     expect(screen.getByText('Release image')).toBeInTheDocument();
-    expect(screen.getByText('Workers')).toBeInTheDocument();
-    expect(screen.getByText('Host type: Small')).toBeInTheDocument();
+    expect(screen.getByText('Small')).toBeInTheDocument();
   });
 
   it('prompts for a template when the selected template id has no match', () => {

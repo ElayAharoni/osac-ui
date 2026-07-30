@@ -88,17 +88,17 @@ describe('NodeSetsFieldEditor', () => {
     expect(screen.getByText('This template has no node sets defined')).toBeInTheDocument();
   });
 
-  it('renders one row per template node set, with the host type read-only', () => {
+  it('renders one row per template node set, headed by its host type', () => {
     mockHostTypes();
     renderEditor(
       { fieldDefinitions: { node_sets: { entriesByKey: {}, editable: true } } },
       twoNodeSetTemplate,
     );
 
-    expect(screen.getByText('Workers')).toBeInTheDocument();
-    expect(screen.getByText('Masters')).toBeInTheDocument();
-    expect(screen.getByText('Host type: Small')).toBeInTheDocument();
-    expect(screen.getByText('Host type: Large')).toBeInTheDocument();
+    // A node set always maps to exactly one host type, so the host type alone is shown as the
+    // group's header — no separate key label or badge duplicating the same information.
+    expect(screen.getByText('Small')).toBeInTheDocument();
+    expect(screen.getByText('Large')).toBeInTheDocument();
     // No free-form host type picker or add/remove controls — the template fully determines them.
     expect(screen.queryByRole('button', { name: 'Add node set' })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/^Host type/)).not.toBeInTheDocument();
@@ -111,7 +111,7 @@ describe('NodeSetsFieldEditor', () => {
       twoNodeSetTemplate,
     );
 
-    const workersGroup = within(screen.getByRole('group', { name: 'Workers' }));
+    const workersGroup = within(screen.getByRole('group', { name: 'Small' }));
     await user.type(workersGroup.getByLabelText('Default nodes'), '3');
     await user.type(workersGroup.getByLabelText('Minimum nodes'), '1');
     await user.type(workersGroup.getByLabelText('Maximum nodes'), '5');
@@ -134,7 +134,7 @@ describe('NodeSetsFieldEditor', () => {
     );
 
     expect(screen.getByText('Could not load host types')).toBeInTheDocument();
-    expect(screen.getByText('Host type: small')).toBeInTheDocument();
+    expect(screen.getByText('small')).toBeInTheDocument();
   });
 
   it('toggles the editable switch', async () => {

@@ -189,7 +189,6 @@
   "Graphical console viewer could not start because the display area has no size": "Graphical console viewer could not start because the display area has no size",
   "Host type": "Host type",
   "Host type is required": "Host type is required",
-  "Host type: {{hostType}}": "Host type: {{hostType}}",
   "ICMP": "ICMP",
   "Inbound Rules": "Inbound Rules",
   "Instance type": "Instance type",

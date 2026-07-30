@@ -152,8 +152,7 @@ describe('ClusterCatalogItemCreatePage', () => {
     await selectTemplate(user);
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
-    expect(screen.getByText('Workers')).toBeInTheDocument();
-    expect(screen.getByText('Host type: Small')).toBeInTheDocument();
+    expect(screen.getByText('Small')).toBeInTheDocument();
     expect(screen.queryByLabelText(/^Host type/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Next' }));
