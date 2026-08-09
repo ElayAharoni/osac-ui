@@ -43,9 +43,21 @@ describe('navRowsForRole', () => {
     }
   });
 
-  it('includes Tenants and Storage under Administration for admin role', () => {
+  it('includes Tenants under Administration for admin role', () => {
     expect(findSection('admin', 'nav-administration')?.children).toEqual([
       { id: 'tenant', label: 'Tenants', path: '/admin/tenants' },
+    ]);
+  });
+
+  it('Infrastructure section shows up only for admin role', () => {
+    expect(findSection('admin', 'nav-infrastructure')).toBeDefined();
+    for (const role of ['tenant-user', 'tenant-admin', 'tenant-idp-manager'] as UserRole[]) {
+      expect(findSection(role, 'nav-infrastructure')).toBeUndefined();
+    }
+  });
+
+  it('includes Storage under Infrastructure for admin role', () => {
+    expect(findSection('admin', 'nav-infrastructure')?.children).toEqual([
       { id: 'storage', label: 'Storage', path: '/admin/storage' },
     ]);
   });
