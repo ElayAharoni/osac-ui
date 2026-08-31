@@ -6,6 +6,7 @@ import { type ComputeInstanceCatalogItem, ComputeInstanceSchema } from '@osac/ty
 import { applyVmCatalogConfigurationDefaults } from './computeInstance/applyCatalogDefaults';
 import { applyVmCatalogGeneralDefaults } from './computeInstance/applyCatalogGeneralDefaults';
 import type { ComputeInstanceWizardValues } from './computeInstance/fields';
+import { mapComputeInstanceProvisionError } from './computeInstance/mapProvisionError';
 import {
   buildComputeInstanceCreatePayload,
   createEmptyComputeInstanceValues,
@@ -55,6 +56,7 @@ export const useComputeInstanceAdapter = (): CatalogProvisionAdapter<
       getStepValidationSchema: (catalogItem, stepId) =>
         buildComputeInstanceStepSchema(catalogItem, stepId, t),
       ReviewStep: VmReviewStep,
+      mapProvisionError: mapComputeInstanceProvisionError,
       onCatalogItemSelected: (item, helpers) => {
         helpers.resetForm({
           values: {
