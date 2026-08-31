@@ -2,8 +2,11 @@ import { getErrorMessage } from '../../../../../utils/error';
 import type { ProvisionErrorResult } from '../types';
 import type { ComputeInstanceWizardValues } from './fields';
 
-const BOOT_TIER_REQUIRED_RE = /^boot_disk\.storage_tier is required\b/;
-const ADDITIONAL_TIER_REQUIRED_RE = /^additional_disks\[(\d+)\]\.storage_tier is required\b/;
+// Unanchored: none of these carry a field path in a fixed position, so any of them
+// may appear mid-sentence (e.g. wrapped by a gRPC status prefix) rather than at the
+// start of the raw message.
+const BOOT_TIER_REQUIRED_RE = /boot_disk\.storage_tier is required\b/;
+const ADDITIONAL_TIER_REQUIRED_RE = /additional_disks\[(\d+)\]\.storage_tier is required\b/;
 const TIER_NOT_FOUND_RE = /storage tier ['"]([^'"]+)['"] does not exist/;
 
 export const mapComputeInstanceProvisionError = (
@@ -29,8 +32,6 @@ export const mapComputeInstanceProvisionError = (
     }
   }
 
-  // Unanchored: this message carries no field path, so it may appear mid-sentence
-  // (e.g. wrapped by a gRPC status prefix) rather than at the start of the string.
   const notFoundMatch = message.match(TIER_NOT_FOUND_RE);
   if (notFoundMatch) {
     const tierName = notFoundMatch[1];

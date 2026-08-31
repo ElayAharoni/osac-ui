@@ -21,6 +21,41 @@ describe('mapComputeInstanceProvisionError', () => {
     });
   });
 
+  it('matches a ConnectError-shaped rejection via rawMessage, stripped of the code prefix', () => {
+    const connectError = Object.assign(
+      new Error('[invalid_argument] boot_disk.storage_tier is required'),
+      {
+        rawMessage: 'boot_disk.storage_tier is required',
+      },
+    );
+
+    const result = mapComputeInstanceProvisionError(
+      connectError,
+      createEmptyComputeInstanceValues(),
+    );
+
+    expect(result).toEqual({
+      kind: 'field',
+      stepId: 'storage',
+      fieldName: 'spec.bootDisk.storageTier',
+      message: 'boot_disk.storage_tier is required',
+    });
+  });
+
+  it('matches a required-tier message wrapped by a status prefix', () => {
+    const result = mapComputeInstanceProvisionError(
+      new Error('rpc error: code = InvalidArgument desc = boot_disk.storage_tier is required'),
+      createEmptyComputeInstanceValues(),
+    );
+
+    expect(result).toEqual({
+      kind: 'field',
+      stepId: 'storage',
+      fieldName: 'spec.bootDisk.storageTier',
+      message: 'rpc error: code = InvalidArgument desc = boot_disk.storage_tier is required',
+    });
+  });
+
   it.each([0, 2])(
     'attributes an additional-disk-tier-required rejection to disk row %i',
     (index) => {
