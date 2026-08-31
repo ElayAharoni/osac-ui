@@ -24,6 +24,7 @@ import type {
   CatalogProvisionWizardValues,
 } from './catalogProvisionTypes';
 import { useTranslation } from '../../hooks/useTranslation';
+import { getErrorMessage } from '../../utils/error';
 import { CatalogItem } from '../catalog/catalogItemDisplay';
 import { FieldValidationProvider } from '../Form/FieldValidationContext';
 import { useBareMetalInstanceAdapter } from './wizard/adapters/bareMetalInstanceAdapter';
@@ -77,6 +78,9 @@ interface WizardFooterProps {
   buildCreatePayload: ErasedCatalogAdapter['buildCreatePayload'];
   close: (options?: { notifyClosed?: boolean }) => void;
   requestClose: () => void;
+  orderedSteps: readonly WizardStepId[];
+  mapProvisionError?: ErasedCatalogAdapter['mapProvisionError'];
+  suppressNextStepChangeClear: () => void;
 }
 
 const isWizardStepId = (stepId: string | number | undefined): stepId is WizardStepId =>
@@ -94,6 +98,9 @@ const CatalogProvisionWizardFooter = ({
   buildCreatePayload,
   close,
   requestClose,
+  orderedSteps,
+  mapProvisionError,
+  suppressNextStepChangeClear,
 }: WizardFooterProps) => {
   const { t } = useTranslation();
   const { activeStep, goToStepByIndex } = useWizardContext();
@@ -148,9 +155,22 @@ const CatalogProvisionWizardFooter = ({
           close({ notifyClosed: false });
         })
         .catch((error) => {
-          setProvisionError(
-            error instanceof Error ? error.message : t('catalogProvision.errors.provisionFailed'),
-          );
+          let mapped;
+          try {
+            mapped = mapProvisionError?.(error, values);
+          } catch {
+            mapped = undefined;
+          }
+          if (mapped?.kind === 'field' && orderedSteps.includes(mapped.stepId)) {
+            if (mapped.stepId !== activeStepId) {
+              suppressNextStepChangeClear();
+              goToStepByIndex(orderedSteps.indexOf(mapped.stepId) + 1);
+            }
+            formik.setFieldError(mapped.fieldName, mapped.message);
+            setValidationAlert(true);
+          } else {
+            setProvisionError(mapped?.message ?? getErrorMessage(error));
+          }
         })
         .finally(() => {
           setPending(false);
@@ -166,16 +186,22 @@ const CatalogProvisionWizardFooter = ({
       goToStepByIndex(stepIndex + 1);
     });
   }, [
+    activeStepId,
     buildCreatePayload,
     catalogItem,
     close,
+    formik,
     goToStepByIndex,
     isReview,
+    mapProvisionError,
     onProvision,
+    orderedSteps,
     pending,
     setPending,
     setProvisionError,
+    setValidationAlert,
     stepIndex,
+    suppressNextStepChangeClear,
     t,
     validateCurrentStep,
     values,
@@ -415,7 +441,18 @@ const CatalogProvisionWizardForm = ({
     onCloseHandlerChange?.({ requestClose, pending });
   }, [onCloseHandlerChange, pending, requestClose]);
 
+  // Set right before a programmatic goToStepByIndex that navigates to a field-attributed
+  // error's step, so that Wizard's own onStepChange doesn't immediately clear it.
+  const suppressNextStepChangeClearRef = useRef(false);
+  const suppressNextStepChangeClear = useCallback(() => {
+    suppressNextStepChangeClearRef.current = true;
+  }, []);
+
   const handleStepChange = useCallback(() => {
+    if (suppressNextStepChangeClearRef.current) {
+      suppressNextStepChangeClearRef.current = false;
+      return;
+    }
     setProvisionError(undefined);
     setValidationAlert(false);
   }, [setProvisionError, setValidationAlert]);
@@ -498,6 +535,9 @@ const CatalogProvisionWizardForm = ({
                 buildCreatePayload={adapter.buildCreatePayload}
                 close={close}
                 requestClose={requestClose}
+                orderedSteps={orderedSteps}
+                mapProvisionError={adapter.mapProvisionError}
+                suppressNextStepChangeClear={suppressNextStepChangeClear}
               />
             </WizardFooterWrapper>
           }
