@@ -42,17 +42,30 @@ describe('mapComputeInstanceProvisionError', () => {
     });
   });
 
-  it('matches a required-tier message wrapped by a status prefix', () => {
+  it('falls back to a banner when the required-tier phrase only appears mid-message', () => {
     const result = mapComputeInstanceProvisionError(
-      new Error('rpc error: code = InvalidArgument desc = boot_disk.storage_tier is required'),
+      new Error(
+        'validation summary: field boot_disk.storage_tier is required in some contexts, see docs',
+      ),
       createEmptyComputeInstanceValues(),
     );
 
     expect(result).toEqual({
-      kind: 'field',
-      stepId: 'storage',
-      fieldName: 'spec.bootDisk.storageTier',
-      message: 'rpc error: code = InvalidArgument desc = boot_disk.storage_tier is required',
+      kind: 'banner',
+      message:
+        'validation summary: field boot_disk.storage_tier is required in some contexts, see docs',
+    });
+  });
+
+  it('falls back to a banner when the tier-not-found phrase only appears mid-message', () => {
+    const result = mapComputeInstanceProvisionError(
+      new Error("note: an earlier request said storage tier 'fast' does not exist for tenant B"),
+      createEmptyComputeInstanceValues(),
+    );
+
+    expect(result).toEqual({
+      kind: 'banner',
+      message: "note: an earlier request said storage tier 'fast' does not exist for tenant B",
     });
   });
 

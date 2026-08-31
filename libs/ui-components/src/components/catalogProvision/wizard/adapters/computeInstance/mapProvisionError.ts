@@ -2,12 +2,15 @@ import { getErrorMessage } from '../../../../../utils/error';
 import type { ProvisionErrorResult } from '../types';
 import type { ComputeInstanceWizardValues } from './fields';
 
-// Unanchored: none of these carry a field path in a fixed position, so any of them
-// may appear mid-sentence (e.g. wrapped by a gRPC status prefix) rather than at the
-// start of the raw message.
-const BOOT_TIER_REQUIRED_RE = /boot_disk\.storage_tier is required\b/;
-const ADDITIONAL_TIER_REQUIRED_RE = /additional_disks\[(\d+)\]\.storage_tier is required\b/;
-const TIER_NOT_FOUND_RE = /storage tier ['"]([^'"]+)['"] does not exist/;
+// Anchored at the start: ConnectError.rawMessage passes the server's grpc-status
+// message through verbatim (no wrapping prefix), so these fields always lead the
+// message. Unanchored matching would misattribute an unrelated error that merely
+// quotes this phrasing (e.g. in a longer explanatory message) to a form field.
+const BOOT_TIER_REQUIRED_RE = /^boot_disk\.storage_tier is required\b/;
+const ADDITIONAL_TIER_REQUIRED_RE = /^additional_disks\[(\d+)\]\.storage_tier is required\b/;
+// Fully anchored: the backend's actual message (private_compute_instances_server.go)
+// is exactly this string, nothing more.
+const TIER_NOT_FOUND_RE = /^storage tier ['"]([^'"]+)['"] does not exist$/;
 
 export const mapComputeInstanceProvisionError = (
   error: unknown,
