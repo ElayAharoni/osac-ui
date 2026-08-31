@@ -16,6 +16,7 @@ import {
   VirtualNetworkLocalReferenceSchema,
   VirtualNetworkState,
 } from '@osac/types';
+import { StorageTierSchema, StorageTierState } from '@osac/types/private';
 
 import type { CatalogProvisionKind } from './catalogFieldDefinition';
 import type { CatalogProvisionPayload } from './catalogProvisionTypes';
@@ -345,6 +346,13 @@ const multiFieldCatalogItem: ComputeInstanceCatalogItem = {
     },
   ],
 };
+
+const makeTier = (name: string, displayName: string) =>
+  create(StorageTierSchema, {
+    id: `id-${name}`,
+    metadata: { name, displayName },
+    status: { state: StorageTierState.ACTIVE },
+  });
 
 const apiFixtures: MockApiFixtures = {
   catalogItems: [vmCatalogItem],
@@ -1038,6 +1046,113 @@ describe('CatalogProvisionWizard', () => {
       expect(screen.getByText('provision failed')).toBeInTheDocument();
     });
     expect(screen.getByRole('button', { name: 'Create' })).toBeInTheDocument();
+  });
+
+  it('navigates back to Storage and shows a boot-tier-required rejection on the boot tier field', async () => {
+    const requiredMessage =
+      'boot_disk.storage_tier is required but was not provided by user input, catalog item defaults, or template defaults';
+    const onProvision = vi.fn().mockRejectedValue(new Error(requiredMessage));
+    const { user } = renderWizard({
+      onProvision,
+      apiFixtures: { ...apiFixtures, storageTiers: [makeTier('fast', 'Fast SSD')] },
+    });
+
+    await advanceToReviewStep(user, vmCatalogItem.title);
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+
+    await waitFor(() => {
+      expect(document.getElementById('vm-boot-disk-storage-tier-helper-error')).toHaveTextContent(
+        requiredMessage,
+      );
+    });
+    await expectValidationAlert();
+    expect(screen.getByLabelText(/Boot disk/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create' })).not.toBeInTheDocument();
+  });
+
+  it('navigates back to Storage and shows an additional-disk-tier-required rejection on that row', async () => {
+    const requiredMessage = 'additional_disks[0].storage_tier is required';
+    const onProvision = vi.fn().mockRejectedValue(new Error(requiredMessage));
+    const { user } = renderWizard({
+      onProvision,
+      apiFixtures: { ...apiFixtures, storageTiers: [makeTier('fast', 'Fast SSD')] },
+    });
+
+    await advanceToStorageStep(user, vmCatalogItem.title);
+    await fillStorageStep(user);
+    await user.click(screen.getByRole('button', { name: 'Add disk' }));
+    await waitFor(() => {
+      expect(screen.getByRole('group', { name: 'Disk 1' })).toBeInTheDocument();
+    });
+    const diskRow = within(screen.getByRole('group', { name: 'Disk 1' }));
+    const diskSizeInput = diskRow.getByLabelText(/Size \(GiB\)/);
+    await user.clear(diskSizeInput);
+    await user.type(diskSizeInput, '100');
+    const diskTierInput = diskRow.getByRole('combobox');
+    await user.click(diskTierInput);
+    await user.type(diskTierInput, 'Fast SSD');
+    await user.click(await screen.findByRole('option', { name: /Fast SSD/ }));
+
+    await clickWizardNext(user);
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^Virtual network/)).toBeInTheDocument();
+    });
+    await selectNetworkingPickers(user);
+    await clickWizardNext(user);
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Create' })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+
+    await waitFor(() => {
+      expect(
+        document.getElementById('vm-additional-disk-0-storage-tier-helper-error'),
+      ).toHaveTextContent(requiredMessage);
+    });
+    await expectValidationAlert();
+    expect(screen.getByRole('group', { name: 'Disk 1' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create' })).not.toBeInTheDocument();
+  });
+
+  it('attributes a tier-not-found rejection to the boot tier field carrying that value', async () => {
+    const rejectionMessage = "storage tier 'fast' does not exist";
+    const onProvision = vi.fn().mockRejectedValue(new Error(rejectionMessage));
+    const { user } = renderWizard({
+      onProvision,
+      apiFixtures: { ...apiFixtures, storageTiers: [makeTier('fast', 'Fast SSD')] },
+    });
+
+    await advanceToStorageStep(user, vmCatalogItem.title);
+    const bootTierInput = screen.getByRole('combobox');
+    await user.click(bootTierInput);
+    await user.type(bootTierInput, 'Fast SSD');
+    await user.click(await screen.findByRole('option', { name: /Fast SSD/ }));
+    await waitFor(() => {
+      expect(bootTierInput).toHaveValue('Fast SSD (default)');
+    });
+    await fillStorageStep(user);
+
+    await clickWizardNext(user);
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^Virtual network/)).toBeInTheDocument();
+    });
+    await selectNetworkingPickers(user);
+    await clickWizardNext(user);
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Create' })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+
+    await waitFor(() => {
+      expect(document.getElementById('vm-boot-disk-storage-tier-helper-error')).toHaveTextContent(
+        rejectionMessage,
+      );
+    });
+    await expectValidationAlert();
+    expect(screen.getByLabelText(/Boot disk/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create' })).not.toBeInTheDocument();
   });
 
   it('includes a Storage step in the compute instance wizard and omits it for clusters', async () => {
