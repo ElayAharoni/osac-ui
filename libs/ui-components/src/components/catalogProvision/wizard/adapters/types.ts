@@ -26,6 +26,23 @@ export interface GeneralFieldDescriptor {
   helperTextKey?: string;
 }
 
+/** A server rejection attributable to a specific field on a specific wizard step. */
+export interface ProvisionFieldError {
+  kind: 'field';
+  stepId: WizardStepId;
+  /** Formik dot-path, e.g. 'spec.bootDisk.storageTier' or 'spec.additionalDisks.0.storageTier'. */
+  fieldName: string;
+  message: string;
+}
+
+/** A server rejection that cannot be tied to a field — shown as a banner. */
+export interface ProvisionBannerError {
+  kind: 'banner';
+  message: string;
+}
+
+export type ProvisionErrorResult = ProvisionFieldError | ProvisionBannerError;
+
 export interface CatalogProvisionAdapter<TItem extends CatalogItem, TValues, TPayload> {
   kind: CatalogProvisionKind;
   useCatalogItems: () => CatalogItemsQueryResult<TItem>;
@@ -42,6 +59,8 @@ export interface CatalogProvisionAdapter<TItem extends CatalogItem, TValues, TPa
     stepId: WizardStepId,
   ) => AnyObjectSchema | undefined;
   onCatalogItemSelected?: (item: TItem, helpers: FormikHelpers<TValues>) => void | Promise<void>;
+  /** Optional — only kinds with tier-bearing fields (compute instances) set this. */
+  mapProvisionError?: (error: unknown, values: TValues) => ProvisionErrorResult;
   wizardTitleKey: string;
   wizardDescriptionKey: string;
   breadcrumbCreateLabelKey: string;
