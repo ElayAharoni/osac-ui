@@ -146,7 +146,7 @@ describe('buildComputeInstanceStepSchema', () => {
         metadata: { name: 'web-01', project: '' },
         spec: {
           ...emptyValues.spec,
-          bootDisk: { sizeGib: 'not-a-number', storageTier: '' },
+          bootDisk: { sizeGib: 'not-a-number', storageTier: 'fast' },
         },
       },
       vmCatalogItem,
@@ -184,7 +184,7 @@ describe('buildComputeInstanceStepSchema', () => {
         metadata: { name: 'web-01', project: '' },
         spec: {
           ...emptyValues.spec,
-          bootDisk: { sizeGib: '30', storageTier: '' },
+          bootDisk: { sizeGib: '30', storageTier: 'fast' },
         },
       },
       vmCatalogItem,
@@ -250,7 +250,31 @@ describe('buildComputeInstanceStepSchema', () => {
     );
     expect(errors).toEqual({
       spec: {
-        bootDisk: { sizeGib: 'catalogProvision.validation.required' },
+        bootDisk: {
+          sizeGib: 'catalogProvision.validation.required',
+          storageTier: 'Storage tier is required',
+        },
+      },
+    });
+  });
+
+  it('requires storage tier on the boot disk on storage step', async () => {
+    const errors = await validateStep(
+      'storage',
+      {
+        ...emptyValues,
+        catalogItemId: vmCatalogItem.id,
+        metadata: { name: 'web-01', project: '' },
+        spec: {
+          ...emptyValues.spec,
+          bootDisk: { sizeGib: '30', storageTier: '' },
+        },
+      },
+      vmCatalogItem,
+    );
+    expect(errors).toEqual({
+      spec: {
+        bootDisk: { storageTier: 'Storage tier is required' },
       },
     });
   });
@@ -264,7 +288,7 @@ describe('buildComputeInstanceStepSchema', () => {
         metadata: { name: 'web-01', project: '' },
         spec: {
           ...emptyValues.spec,
-          bootDisk: { sizeGib: '30', storageTier: '' },
+          bootDisk: { sizeGib: '30', storageTier: 'fast' },
           additionalDisks: [{ sizeGib: '100', storageTier: '' }],
         },
       },
@@ -295,7 +319,7 @@ describe('buildComputeInstanceStepSchema', () => {
         metadata: { name: 'web-01', project: '' },
         spec: {
           ...emptyValues.spec,
-          bootDisk: { sizeGib: '30', storageTier: '' },
+          bootDisk: { sizeGib: '30', storageTier: 'fast' },
           additionalDisks: [{ sizeGib, storageTier: 'fast' }],
         },
       },
@@ -325,7 +349,7 @@ describe('buildComputeInstanceStepSchema', () => {
           metadata: { name: 'web-01', project: '' },
           spec: {
             ...emptyValues.spec,
-            bootDisk: { sizeGib: '30', storageTier: '' },
+            bootDisk: { sizeGib: '30', storageTier: 'fast' },
             additionalDisks: [{ sizeGib, storageTier: 'fast' }],
           },
         },

@@ -80,6 +80,7 @@ const buildComputeInstanceFieldDefinitions = (catalogItem: unknown, t: TFunction
         true,
         t('catalogProvision.validation.required'),
       ),
+      storageTier: yup.string().required(t('Storage tier is required')),
     }),
     specAdditionalDisks: yup.array(
       yup.object({

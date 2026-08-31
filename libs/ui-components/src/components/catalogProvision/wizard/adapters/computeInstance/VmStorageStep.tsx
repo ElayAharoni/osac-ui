@@ -47,6 +47,7 @@ export const VmStorageStep = ({ catalogItem }: Props) => {
         label={storageTierOverlay.label}
         fieldId="vm-boot-disk-storage-tier"
         isLocked={!storageTierOverlay.editable}
+        isRequired
       />
       <AdditionalDisksArrayField />
     </OsacForm>

@@ -138,6 +138,12 @@ const fillStorageStep = async (user: UserEvent) => {
     await user.clear(bootDisk);
     await user.type(bootDisk, '40');
   }
+  const bootTierInput = screen.getByRole<HTMLInputElement>('combobox');
+  if (!bootTierInput.value) {
+    await user.click(bootTierInput);
+    await user.type(bootTierInput, 'Fast SSD');
+    await user.click(await screen.findByRole('option', { name: /Fast SSD/ }));
+  }
 };
 
 const advanceToNetworkingStep = async (user: UserEvent, catalogItemTitle: string) => {
@@ -526,6 +532,7 @@ const apiFixtures: MockApiFixtures = {
       },
     },
   ],
+  storageTiers: [makeTier('fast', 'Fast SSD')],
 };
 
 type RenderWizardOptions = {
@@ -626,6 +633,10 @@ describe('CatalogProvisionWizard', () => {
     await waitFor(() => {
       expect(screen.getByLabelText<HTMLInputElement>(/Boot disk/).value).toBe('40');
     });
+    const bootTierInput = screen.getByRole('combobox');
+    await user.click(bootTierInput);
+    await user.type(bootTierInput, 'Fast SSD');
+    await user.click(await screen.findByRole('option', { name: /Fast SSD/ }));
 
     await clickWizardNext(user);
     await selectNetworkingPickers(user);
@@ -645,7 +656,7 @@ describe('CatalogProvisionWizard', () => {
         bootDisk: { sizeGib: 40 },
       },
     });
-  });
+  }, 10000);
 
   it('prefills configuration fields when deep-linked before catalog items finish loading', async () => {
     let releaseCatalogFetch!: () => void;
@@ -1048,6 +1059,9 @@ describe('CatalogProvisionWizard', () => {
     expect(screen.getByRole('button', { name: 'Create' })).toBeInTheDocument();
   });
 
+  // The boot tier is now required client-side, so a real user can no longer submit
+  // with it blank — this simulates the server disagreeing anyway (e.g. a stale tier
+  // list) to verify the mapping/navigation/display mechanism, not a reachable UI path.
   it('navigates back to Storage and shows a boot-tier-required rejection on the boot tier field', async () => {
     const requiredMessage =
       'boot_disk.storage_tier is required but was not provided by user input, catalog item defaults, or template defaults';
