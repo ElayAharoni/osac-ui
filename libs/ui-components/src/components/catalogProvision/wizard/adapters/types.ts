@@ -59,7 +59,11 @@ export interface CatalogProvisionAdapter<TItem extends CatalogItem, TValues, TPa
     stepId: WizardStepId,
   ) => AnyObjectSchema | undefined;
   onCatalogItemSelected?: (item: TItem, helpers: FormikHelpers<TValues>) => void | Promise<void>;
-  /** Optional — only kinds with tier-bearing fields (compute instances) set this. */
+  /**
+   * Optional — only kinds with tier-bearing fields (compute instances) set this.
+   * Must not throw; the wizard falls back to the generic banner if it does, but
+   * implementations should map every reachable input to a result themselves.
+   */
   mapProvisionError?: (error: unknown, values: TValues) => ProvisionErrorResult;
   wizardTitleKey: string;
   wizardDescriptionKey: string;
