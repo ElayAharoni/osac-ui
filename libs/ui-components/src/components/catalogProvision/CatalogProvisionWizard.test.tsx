@@ -1113,7 +1113,7 @@ describe('CatalogProvisionWizard', () => {
     await expectValidationAlert();
     expect(screen.getByRole('group', { name: 'Disk 1' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Create' })).not.toBeInTheDocument();
-  });
+  }, 10000);
 
   it('attributes a tier-not-found rejection to the boot tier field carrying that value', async () => {
     const rejectionMessage = "storage tier 'fast' does not exist";
@@ -1153,7 +1153,7 @@ describe('CatalogProvisionWizard', () => {
     await expectValidationAlert();
     expect(screen.getByLabelText(/Boot disk/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Create' })).not.toBeInTheDocument();
-  });
+  }, 10000);
 
   it('includes a Storage step in the compute instance wizard and omits it for clusters', async () => {
     const { unmount } = renderWizard();

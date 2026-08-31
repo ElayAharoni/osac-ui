@@ -72,7 +72,6 @@
   "catalogProvision.catalog.searchAria": "Search catalog items",
   "catalogProvision.catalog.searchPlaceholder": "Search catalog items…",
   "catalogProvision.common.loading": "Loading...",
-  "catalogProvision.errors.provisionFailed": "Provisioning failed. Please try again.",
   "catalogProvision.errors.provisionTitle": "Could not create resource",
   "catalogProvision.instanceTypes.deprecatedSuffix": " (deprecated)",
   "catalogProvision.instanceTypes.loadError": "Could not load instance types",
