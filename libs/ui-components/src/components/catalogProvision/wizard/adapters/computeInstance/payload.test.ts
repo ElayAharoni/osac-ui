@@ -69,9 +69,9 @@ const baseValues = () => {
     catalogItemId: vmCatalogItem.id,
     metadata: { name: 'web-01', project: '' },
     spec: {
-    ...values.spec,
-    diskImage: 'di-rhel9',
-    instanceType: 'standard-4-8',
+      ...values.spec,
+      diskImage: 'di-rhel9',
+      instanceType: 'standard-4-8',
       networking: { virtualNetwork: 'vnet', subnet: 'subnet-1', securityGroups: ['sg-1'] },
     },
   };

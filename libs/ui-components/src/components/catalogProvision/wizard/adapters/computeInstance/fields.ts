@@ -1,5 +1,8 @@
+import { ComputeInstanceRunStrategy } from '@osac/types';
+
 /** VMs are always created in the running state; stop/start is handled on the details page. */
-export const VM_CREATE_RUN_STRATEGY = 'Always' as const;
+export const VM_CREATE_RUN_STRATEGY =
+  ComputeInstanceRunStrategy.COMPUTE_INSTANCE_RUN_STRATEGY_ALWAYS;
 
 export interface ComputeInstanceNetworkingValues {
   virtualNetwork: string;

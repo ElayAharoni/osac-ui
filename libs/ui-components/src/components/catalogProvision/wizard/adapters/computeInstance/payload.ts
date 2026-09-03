@@ -32,7 +32,7 @@ export const buildComputeInstanceCreatePayload = (
   values: ComputeInstanceWizardValues,
   catalogItem: ComputeInstanceCatalogItem,
 ): MessageInitShape<typeof ComputeInstanceSchema> => {
-  const spec: MessageInitShape<typeof ComputeInstanceSchema>['spec'] = {
+  const spec: NonNullable<MessageInitShape<typeof ComputeInstanceSchema>['spec']> = {
     catalogItem: {
       id: catalogItem.id,
     },

@@ -13,12 +13,12 @@ import {
 } from '../../../api/v1/networking';
 import { useStorageTiers } from '../../../api/v1/storage-tiers';
 import { useTranslation } from '../../../hooks/useTranslation';
+import { VM_DISK_IMAGE_WIRE_PATH } from '../../catalogProvision/wizard/adapters/computeInstance/fields';
 import {
   getCatalogFieldOverlay,
   readCatalogFieldDefinitions,
   resolveStorageTierDisplayName,
 } from '../../catalogProvision/wizard/catalogOverlay';
-import { VM_DISK_IMAGE_WIRE_PATH } from '../../catalogProvision/wizard/adapters/computeInstance/fields';
 
 export type VmNetworkingRow = {
   virtualNetwork: string;

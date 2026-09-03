@@ -1,6 +1,13 @@
 import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Alert, Button, EmptyState, EmptyStateBody, Stack, StackItem } from '@patternfly/react-core';
+import {
+  Alert,
+  Button,
+  EmptyState,
+  EmptyStateBody,
+  Stack,
+  StackItem,
+} from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
 
 import type { ComputeInstanceCatalogItem } from '@osac/types';
@@ -8,6 +15,7 @@ import { Architecture, DiskImageLifecycle } from '@osac/types';
 import { resourceDisplayName } from '@osac/ui-components/api/v1/networking';
 import { formatInstanceTypeOptionLabel } from '@osac/ui-components/components/vm/utils';
 
+import { VM_DISK_IMAGE_WIRE_PATH } from './fields';
 import { useDiskImages } from '../../../../../api/v1/disk-image';
 import {
   INSTANCE_TYPE_ACTIVE_LIST_FILTER,
@@ -22,7 +30,6 @@ import {
   readCatalogFieldDefinitions,
 } from '../../catalogOverlay';
 import UserDataField from '../../fields/UserDataField';
-import { VM_DISK_IMAGE_WIRE_PATH } from './fields';
 
 const ARCH_LABELS: Record<Architecture, string> = {
   [Architecture.UNSPECIFIED]: '',
@@ -98,7 +105,11 @@ export const VmConfigurationStep = ({ catalogItem }: Props) => {
   // (e.g. a catalog default pointed to an OBSOLETE image), clear the selection so
   // the user sees the placeholder and must pick a valid image.
   useEffect(() => {
-    if (!diskImagesLoading && diskImageField.value && !diskImages.find((di) => di.id === diskImageField.value)) {
+    if (
+      !diskImagesLoading &&
+      diskImageField.value &&
+      !diskImages.find((di) => di.id === diskImageField.value)
+    ) {
       void setFieldValue('spec.diskImage', '');
     }
   }, [diskImagesLoading, diskImages, diskImageField.value, setFieldValue]);
@@ -150,8 +161,9 @@ export const VmConfigurationStep = ({ catalogItem }: Props) => {
             <EmptyStateBody>{t('catalogProvision.diskImages.emptyStateBody')}</EmptyStateBody>
             <Button
               variant="link"
-              component={Link}
-              to="/admin/infrastructure/disk-images/create"
+              component={(props: React.ComponentPropsWithRef<'a'>) => (
+                <Link {...(props as object)} to="/admin/infrastructure/disk-images/create" />
+              )}
             >
               {t('catalogProvision.diskImages.createCTA')}
             </Button>

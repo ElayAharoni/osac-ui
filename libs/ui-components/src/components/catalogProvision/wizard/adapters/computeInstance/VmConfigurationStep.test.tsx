@@ -66,10 +66,7 @@ describe('VmConfigurationStep', () => {
   });
 
   it('shows disk image options once loaded', async () => {
-    renderStep([
-      makeDiskImage('di-1', 'rhel9'),
-      makeDiskImage('di-2', 'ubuntu24'),
-    ]);
+    renderStep([makeDiskImage('di-1', 'rhel9'), makeDiskImage('di-2', 'ubuntu24')]);
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Disk image/)).not.toBeDisabled();
@@ -88,12 +85,11 @@ describe('VmConfigurationStep', () => {
     renderStep([]);
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/No disk images are available/),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('link', { name: /Go to Disk Images/ }),
-      ).toHaveAttribute('href', '/admin/infrastructure/disk-images/create');
+      expect(screen.getByText(/No disk images are available/)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /Go to Disk Images/ })).toHaveAttribute(
+        'href',
+        '/admin/infrastructure/disk-images/create',
+      );
     });
   });
 
@@ -116,9 +112,7 @@ describe('VmConfigurationStep', () => {
     renderStep([makeDiskImage('di-1', 'old-rhel8', DiskImageLifecycle.DEPRECATED)]);
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/deprecated and may be removed/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/deprecated and may be removed/)).toBeInTheDocument();
     });
   });
 

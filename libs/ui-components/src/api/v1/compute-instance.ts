@@ -3,6 +3,7 @@ import { timestampNow } from '@bufbuild/protobuf/wkt';
 import { keepPreviousData, useMutation } from '@tanstack/react-query';
 
 import {
+  ComputeInstanceRunStrategy,
   ComputeInstanceSchema,
   ComputeInstanceState,
   ComputeInstances,
@@ -87,12 +88,12 @@ const buildPowerPatchBody = (
   switch (powerAction) {
     case 'stop':
       return {
-        spec: { runStrategy: 'Halted' },
+        spec: { runStrategy: ComputeInstanceRunStrategy.COMPUTE_INSTANCE_RUN_STRATEGY_HALTED },
         status: { state: ComputeInstanceState.STOPPED },
       };
     case 'start':
       return {
-        spec: { runStrategy: 'Always' },
+        spec: { runStrategy: ComputeInstanceRunStrategy.COMPUTE_INSTANCE_RUN_STRATEGY_ALWAYS },
         status: { state: ComputeInstanceState.RUNNING },
       };
     case 'restart':

@@ -4,6 +4,7 @@ import * as yup from 'yup';
 import { resourceNameSchema } from '@osac/ui-components/validation/resource-name';
 import { userDataSchema } from '@osac/ui-components/validation/user-data';
 
+import { VM_DISK_IMAGE_WIRE_PATH } from './fields';
 import {
   getCatalogFieldOverlay,
   hasCatalogFieldDefinition,
@@ -11,7 +12,6 @@ import {
   readCatalogFieldDefinitions,
 } from '../../catalogOverlay';
 import { isValidSshPublicKey } from '../../fields/credentialValidation';
-import { VM_DISK_IMAGE_WIRE_PATH } from './fields';
 import type { WizardStepId } from '../../stepIds';
 
 const buildComputeInstanceFieldDefinitions = (catalogItem: unknown, t: TFunction) => {

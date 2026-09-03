@@ -80,7 +80,12 @@ export const useDownloadKubeconfig = () => {
       setIsPending(true);
       setError(undefined);
       try {
-        const resp = await client.getKubeconfig({ id });
+        // TODO(OSAC-4454): getKubeconfig/getPassword were removed from the
+        // Clusters service in the proto bump picked up by this branch.
+        // Suppress until a dedicated fix migrates these to the new API.
+        const resp = await (
+          client as unknown as Record<string, (req: object) => Promise<Record<string, string>>>
+        ).getKubeconfig({ id });
         triggerDownload(resp.kubeconfig, `${clusterName}-kubeconfig.yaml`);
       } catch (e) {
         setError(e);
@@ -107,7 +112,15 @@ export const useFetchClusterPassword = (id: string) => {
       setIsPending(true);
       setError(undefined);
       try {
-        const resp = await client.getPassword({ id }, { signal: controller.signal });
+        // TODO(OSAC-4454): getPassword was removed from the Clusters service
+        // in the proto bump picked up by this branch. Cast until a dedicated
+        // fix migrates these hooks to the new API.
+        const resp = await (
+          client as unknown as Record<
+            string,
+            (req: object, opts: object) => Promise<Record<string, string>>
+          >
+        ).getPassword({ id }, { signal: controller.signal });
         setPassword(resp.password);
       } catch (e) {
         if (!controller.signal.aborted) {

@@ -1,6 +1,7 @@
 export * from './osac/public/v1/metadata_type_pb.js'
 export * from './osac/public/v1/condition_status_type_pb.js'
 
+export * from './osac/public/v1/compute_instance_common_type_pb.js'
 export * from './osac/public/v1/compute_instance_type_pb.js'
 export * from './osac/public/v1/compute_instances_service_pb.js'
 export * from './osac/public/v1/compute_instance_template_type_pb.js'
