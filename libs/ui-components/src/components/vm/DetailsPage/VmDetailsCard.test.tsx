@@ -6,6 +6,9 @@ import {
   ComputeInstance,
   ComputeInstanceCatalogItemReferenceSchema,
   ComputeInstanceTemplateReferenceSchema,
+  DiskImage,
+  DiskImageLifecycle,
+  DiskImageReferenceSchema,
   InstanceTypeReferenceSchema,
   InstanceTypeState,
 } from '@osac/types';
@@ -22,6 +25,31 @@ vi.mock('./VmDetailsCatalogValue', () => ({
 }));
 
 const { useVmDetailsDisplay } = await import('./useVmDetailsDisplay');
+
+const rhel9Image: DiskImage = {
+  $typeName: 'osac.public.v1.DiskImage',
+  id: 'rhel9-image-id',
+  metadata: {
+    $typeName: 'osac.public.v1.Metadata',
+    name: 'RHEL 9',
+    displayName: '',
+    description: '',
+    creator: 'admin',
+    labels: {},
+    annotations: {},
+    project: '',
+    tenant: '',
+    version: 1,
+  },
+  spec: {
+    $typeName: 'osac.public.v1.DiskImageSpec',
+    lifecycle: DiskImageLifecycle.AVAILABLE,
+    architecture: [],
+    guestOsFamily: 0,
+    sourceRef: '',
+    sourceType: 0,
+  } as unknown as DiskImage['spec'],
+} as unknown as DiskImage;
 
 const catalogVm: ComputeInstance = {
   $typeName: 'osac.public.v1.ComputeInstance',
@@ -47,11 +75,7 @@ const catalogVm: ComputeInstance = {
     $typeName: 'osac.public.v1.ComputeInstanceSpec',
     catalogItem: create(ComputeInstanceCatalogItemReferenceSchema, { id: 'catalog-rhel-9' }),
     sshPublicKey: 'ssh-rsa AAAA...',
-    image: {
-      $typeName: 'osac.public.v1.ComputeInstanceImage',
-      sourceRef: 'quay.io/example/rhel9',
-      sourceType: '',
-    },
+    diskImage: create(DiskImageReferenceSchema, { id: 'rhel9-image-id' }),
     instanceType: create(InstanceTypeReferenceSchema, { id: 'standard-4-8' }),
     bootDisk: {
       $typeName: 'osac.public.v1.ComputeInstanceDisk',
@@ -67,7 +91,9 @@ const catalogVm: ComputeInstance = {
 };
 
 const renderCard = (vm: ComputeInstance = catalogVm) =>
-  renderWithProviders(<VmDetailsCard vm={vm} />);
+  renderWithProviders(<VmDetailsCard vm={vm} />, {
+    apiFixtures: { diskImages: [rhel9Image] },
+  });
 
 describe('VmDetailsCard', () => {
   it('shows catalog fields with full SSH key', () => {

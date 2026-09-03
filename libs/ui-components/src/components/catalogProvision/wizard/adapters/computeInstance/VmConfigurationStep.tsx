@@ -26,6 +26,7 @@ const ARCH_LABELS: Record<Architecture, string> = {
   [Architecture.UNSPECIFIED]: '',
   [Architecture.AMD64]: 'AMD64',
   [Architecture.ARM64]: 'ARM64',
+  [Architecture.S390X]: 'S390X',
 };
 
 interface Props {
