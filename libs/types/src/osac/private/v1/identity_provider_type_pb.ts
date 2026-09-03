@@ -17,24 +17,27 @@
 
 import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
+import { file_cleanapi_cleanapi } from "../../../cleanapi/cleanapi_pb";
 import type { Timestamp } from "../../../google/protobuf/timestamp_pb";
 import { file_google_protobuf_timestamp } from "../../../google/protobuf/timestamp_pb";
 import type { ConditionStatus } from "./condition_status_type_pb";
 import { file_osac_private_v1_condition_status_type } from "./condition_status_type_pb";
 import type { Metadata } from "./metadata_type_pb";
 import { file_osac_private_v1_metadata_type } from "./metadata_type_pb";
+import type { SecretLocalReference } from "./secret_type_pb";
+import { file_osac_private_v1_secret_type } from "./secret_type_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file osac/private/v1/identity_provider_type.proto.
  */
 export const file_osac_private_v1_identity_provider_type: GenFile = /*@__PURE__*/
-  fileDesc("Cixvc2FjL3ByaXZhdGUvdjEvaWRlbnRpdHlfcHJvdmlkZXJfdHlwZS5wcm90bxIPb3NhYy5wcml2YXRlLnYxIrkBChBJZGVudGl0eVByb3ZpZGVyEgoKAmlkGAEgASgJEisKCG1ldGFkYXRhGAIgASgLMhkub3NhYy5wcml2YXRlLnYxLk1ldGFkYXRhEjMKBHNwZWMYAyABKAsyJS5vc2FjLnByaXZhdGUudjEuSWRlbnRpdHlQcm92aWRlclNwZWMSNwoGc3RhdHVzGAQgASgLMicub3NhYy5wcml2YXRlLnYxLklkZW50aXR5UHJvdmlkZXJTdGF0dXMi0wEKFElkZW50aXR5UHJvdmlkZXJTcGVjEg0KBXRpdGxlGAEgASgJEhgKC2Rlc2NyaXB0aW9uGAIgASgJSAGIAQESDwoHZW5hYmxlZBgDIAEoCBIrCgRvaWRjGAQgASgLMhsub3NhYy5wcml2YXRlLnYxLk9pZGNDb25maWdIABIhChRoZWFsdGhfY2hlY2tfdHJpZ2dlchgGIAEoCUgCiAEBQggKBmNvbmZpZ0IOCgxfZGVzY3JpcHRpb25CFwoVX2hlYWx0aF9jaGVja190cmlnZ2VyItYCCgpPaWRjQ29uZmlnEhkKEWF1dGhvcml6YXRpb25fdXJsGAEgASgJEhEKCXRva2VuX3VybBgCIAEoCRIRCgljbGllbnRfaWQYAyABKAkSFQoNY2xpZW50X3NlY3JldBgEIAEoCRIOCgZpc3N1ZXIYBSABKAkSGwoOZGVmYXVsdF9zY29wZXMYBiABKAlIAIgBARIaCg11c2VyX2luZm9fdXJsGAcgASgJSAGIAQESFQoIandrc191cmwYCCABKAlIAogBARIfChJ2YWxpZGF0ZV9zaWduYXR1cmUYCSABKAhIA4gBARIXCgpsb2dvdXRfdXJsGAogASgJSASIAQFCEQoPX2RlZmF1bHRfc2NvcGVzQhAKDl91c2VyX2luZm9fdXJsQgsKCV9qd2tzX3VybEIVChNfdmFsaWRhdGVfc2lnbmF0dXJlQg0KC19sb2dvdXRfdXJsIqUCChZJZGVudGl0eVByb3ZpZGVyU3RhdHVzEjUKBXBoYXNlGAEgASgOMiYub3NhYy5wcml2YXRlLnYxLklkZW50aXR5UHJvdmlkZXJQaGFzZRIPCgdtZXNzYWdlGAIgASgJEj4KCmNvbmRpdGlvbnMYAyADKAsyKi5vc2FjLnByaXZhdGUudjEuSWRlbnRpdHlQcm92aWRlckNvbmRpdGlvbhIhChRoZWFsdGhfY2hlY2tfdHJpZ2dlchgEIAEoCUgAiAEBEjwKBmhlYWx0aBgFIAEoCzInLm9zYWMucHJpdmF0ZS52MS5JZGVudGl0eVByb3ZpZGVySGVhbHRoSAGIAQFCFwoVX2hlYWx0aF9jaGVja190cmlnZ2VyQgkKB19oZWFsdGgitgEKGUlkZW50aXR5UHJvdmlkZXJDb25kaXRpb24SDAoEdHlwZRgBIAEoCRIwCgZzdGF0dXMYAiABKA4yIC5vc2FjLnByaXZhdGUudjEuQ29uZGl0aW9uU3RhdHVzEg4KBnJlYXNvbhgDIAEoCRIPCgdtZXNzYWdlGAQgASgJEjgKFGxhc3RfdHJhbnNpdGlvbl90aW1lGAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKrAQoWSWRlbnRpdHlQcm92aWRlckhlYWx0aBI9CgZzdGF0dXMYASABKA4yLS5vc2FjLnByaXZhdGUudjEuSWRlbnRpdHlQcm92aWRlckhlYWx0aFN0YXR1cxIUCgdtZXNzYWdlGAIgASgJSACIAQESMAoMbGFzdF9jaGVja2VkGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIKCghfbWVzc2FnZSqrAQoVSWRlbnRpdHlQcm92aWRlclBoYXNlEicKI0lERU5USVRZX1BST1ZJREVSX1BIQVNFX1VOU1BFQ0lGSUVEEAASIQodSURFTlRJVFlfUFJPVklERVJfUEhBU0VfUkVBRFkQARIhCh1JREVOVElUWV9QUk9WSURFUl9QSEFTRV9FUlJPUhACEiMKH0lERU5USVRZX1BST1ZJREVSX1BIQVNFX1VOS05PV04QAyrYAQocSWRlbnRpdHlQcm92aWRlckhlYWx0aFN0YXR1cxIvCitJREVOVElUWV9QUk9WSURFUl9IRUFMVEhfU1RBVFVTX1VOU1BFQ0lGSUVEEAASKwonSURFTlRJVFlfUFJPVklERVJfSEVBTFRIX1NUQVRVU19IRUFMVEhZEAESLQopSURFTlRJVFlfUFJPVklERVJfSEVBTFRIX1NUQVRVU19VTkhFQUxUSFkQAhIrCidJREVOVElUWV9QUk9WSURFUl9IRUFMVEhfU1RBVFVTX1VOS05PV04QA2IGcHJvdG8z", [file_google_protobuf_timestamp, file_osac_private_v1_condition_status_type, file_osac_private_v1_metadata_type]);
+  fileDesc("Cixvc2FjL3ByaXZhdGUvdjEvaWRlbnRpdHlfcHJvdmlkZXJfdHlwZS5wcm90bxIPb3NhYy5wcml2YXRlLnYxIrkBChBJZGVudGl0eVByb3ZpZGVyEgoKAmlkGAEgASgJEisKCG1ldGFkYXRhGAIgASgLMhkub3NhYy5wcml2YXRlLnYxLk1ldGFkYXRhEjMKBHNwZWMYAyABKAsyJS5vc2FjLnByaXZhdGUudjEuSWRlbnRpdHlQcm92aWRlclNwZWMSNwoGc3RhdHVzGAQgASgLMicub3NhYy5wcml2YXRlLnYxLklkZW50aXR5UHJvdmlkZXJTdGF0dXMi0wEKFElkZW50aXR5UHJvdmlkZXJTcGVjEg0KBXRpdGxlGAEgASgJEhgKC2Rlc2NyaXB0aW9uGAIgASgJSAGIAQESDwoHZW5hYmxlZBgDIAEoCBIrCgRvaWRjGAQgASgLMhsub3NhYy5wcml2YXRlLnYxLk9pZGNDb25maWdIABIhChRoZWFsdGhfY2hlY2tfdHJpZ2dlchgGIAEoCUgCiAEBQggKBmNvbmZpZ0IOCgxfZGVzY3JpcHRpb25CFwoVX2hlYWx0aF9jaGVja190cmlnZ2VyIpsDCgpPaWRjQ29uZmlnEhkKEWF1dGhvcml6YXRpb25fdXJsGAEgASgJEhEKCXRva2VuX3VybBgCIAEoCRIRCgljbGllbnRfaWQYAyABKAkSFQoNY2xpZW50X3NlY3JldBgEIAEoCRIOCgZpc3N1ZXIYBSABKAkSGwoOZGVmYXVsdF9zY29wZXMYBiABKAlIAIgBARIaCg11c2VyX2luZm9fdXJsGAcgASgJSAGIAQESFQoIandrc191cmwYCCABKAlIAogBARIfChJ2YWxpZGF0ZV9zaWduYXR1cmUYCSABKAhIA4gBARIXCgpsb2dvdXRfdXJsGAogASgJSASIAQESQwoUY2xpZW50X3NlY3JldF9zZWNyZXQYCyABKAsyJS5vc2FjLnByaXZhdGUudjEuU2VjcmV0TG9jYWxSZWZlcmVuY2VCEQoPX2RlZmF1bHRfc2NvcGVzQhAKDl91c2VyX2luZm9fdXJsQgsKCV9qd2tzX3VybEIVChNfdmFsaWRhdGVfc2lnbmF0dXJlQg0KC19sb2dvdXRfdXJsIq0CChZJZGVudGl0eVByb3ZpZGVyU3RhdHVzEjUKBXBoYXNlGAEgASgOMiYub3NhYy5wcml2YXRlLnYxLklkZW50aXR5UHJvdmlkZXJQaGFzZRIPCgdtZXNzYWdlGAIgASgJEiEKFGhlYWx0aF9jaGVja190cmlnZ2VyGAMgASgJSACIAQESPAoGaGVhbHRoGAQgASgLMicub3NhYy5wcml2YXRlLnYxLklkZW50aXR5UHJvdmlkZXJIZWFsdGhIAYgBARJGCgpjb25kaXRpb25zGAUgAygLMioub3NhYy5wcml2YXRlLnYxLklkZW50aXR5UHJvdmlkZXJDb25kaXRpb25CBoq1GAIIAUIXChVfaGVhbHRoX2NoZWNrX3RyaWdnZXJCCQoHX2hlYWx0aCK+AQoZSWRlbnRpdHlQcm92aWRlckNvbmRpdGlvbhIMCgR0eXBlGAEgASgJEjAKBnN0YXR1cxgCIAEoDjIgLm9zYWMucHJpdmF0ZS52MS5Db25kaXRpb25TdGF0dXMSDgoGcmVhc29uGAMgASgJEg8KB21lc3NhZ2UYBCABKAkSOAoUbGFzdF90cmFuc2l0aW9uX3RpbWUYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wOgaKtRgCCAEiqwEKFklkZW50aXR5UHJvdmlkZXJIZWFsdGgSPQoGc3RhdHVzGAEgASgOMi0ub3NhYy5wcml2YXRlLnYxLklkZW50aXR5UHJvdmlkZXJIZWFsdGhTdGF0dXMSFAoHbWVzc2FnZRgCIAEoCUgAiAEBEjAKDGxhc3RfY2hlY2tlZBgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXBCCgoIX21lc3NhZ2UqqwEKFUlkZW50aXR5UHJvdmlkZXJQaGFzZRInCiNJREVOVElUWV9QUk9WSURFUl9QSEFTRV9VTlNQRUNJRklFRBAAEiEKHUlERU5USVRZX1BST1ZJREVSX1BIQVNFX1JFQURZEAESIQodSURFTlRJVFlfUFJPVklERVJfUEhBU0VfRVJST1IQAhIjCh9JREVOVElUWV9QUk9WSURFUl9QSEFTRV9VTktOT1dOEAMq2AEKHElkZW50aXR5UHJvdmlkZXJIZWFsdGhTdGF0dXMSLworSURFTlRJVFlfUFJPVklERVJfSEVBTFRIX1NUQVRVU19VTlNQRUNJRklFRBAAEisKJ0lERU5USVRZX1BST1ZJREVSX0hFQUxUSF9TVEFUVVNfSEVBTFRIWRABEi0KKUlERU5USVRZX1BST1ZJREVSX0hFQUxUSF9TVEFUVVNfVU5IRUFMVEhZEAISKwonSURFTlRJVFlfUFJPVklERVJfSEVBTFRIX1NUQVRVU19VTktOT1dOEANCFIq1GBASDm9zYWMucHVibGljLnYxYgZwcm90bzM", [file_cleanapi_cleanapi, file_google_protobuf_timestamp, file_osac_private_v1_condition_status_type, file_osac_private_v1_metadata_type, file_osac_private_v1_secret_type]);
 
 /**
  * IdentityProvider represents an external identity provider configuration.
  * Identity providers enable users to authenticate using their existing corporate credentials
- * (LDAP, Active Directory, OIDC, SAML, etc.).
+ * (LDAP, Active Directory, OIDC, SAML, etc.) rather than managing separate credentials.
  *
  * @generated from message osac.private.v1.IdentityProvider
  */
@@ -173,6 +176,7 @@ export type OidcConfig = Message<"osac.private.v1.OidcConfig"> & {
   /**
    * Client secret for authenticating with the OIDC provider.
    * This field is write-only and will never be returned in API responses.
+   * Mutually exclusive with `client_secret_secret`.
    *
    * @generated from field: string client_secret = 4;
    */
@@ -229,6 +233,17 @@ export type OidcConfig = Message<"osac.private.v1.OidcConfig"> & {
    * @generated from field: optional string logout_url = 10;
    */
   logoutUrl?: string | undefined;
+
+  /**
+   * Reference to a Secret resource containing the OIDC client secret.
+   *
+   * Mutually exclusive with `client_secret`. When set, the system resolves the referenced Secret to obtain the
+   * client secret value. The referenced Secret must exist in the same tenant. The secret data must contain a `value`
+   * entry.
+   *
+   * @generated from field: osac.private.v1.SecretLocalReference client_secret_secret = 11;
+   */
+  clientSecretSecret?: SecretLocalReference | undefined;
 };
 
 /**
@@ -259,19 +274,12 @@ export type IdentityProviderStatus = Message<"osac.private.v1.IdentityProviderSt
   message: string;
 
   /**
-   * Conditions represent specific aspects of the identity provider's status.
-   *
-   * @generated from field: repeated osac.private.v1.IdentityProviderCondition conditions = 3;
-   */
-  conditions: IdentityProviderCondition[];
-
-  /**
    * This is used by the system to track when the spec.health_check_trigger has changed
    * and to acknowledge that the health check process has started.
    * The system will update it to match spec.health_check_trigger when the check begins.
    * Users can compare this to spec.health_check_trigger to see if their check request has been acknowledged.
    *
-   * @generated from field: optional string health_check_trigger = 4;
+   * @generated from field: optional string health_check_trigger = 3;
    */
   healthCheckTrigger?: string | undefined;
 
@@ -279,9 +287,16 @@ export type IdentityProviderStatus = Message<"osac.private.v1.IdentityProviderSt
    * Health check results from the last health check that completed.
    * This is populated after a health check triggered by spec.health_check_trigger completes.
    *
-   * @generated from field: optional osac.private.v1.IdentityProviderHealth health = 5;
+   * @generated from field: optional osac.private.v1.IdentityProviderHealth health = 4;
    */
   health?: IdentityProviderHealth | undefined;
+
+  /**
+   * Conditions represent specific aspects of the identity provider's status.
+   *
+   * @generated from field: repeated osac.private.v1.IdentityProviderCondition conditions = 5;
+   */
+  conditions: IdentityProviderCondition[];
 };
 
 /**

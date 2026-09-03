@@ -18,6 +18,7 @@
 import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import { file_buf_validate_validate } from "../../../buf/validate/validate_pb";
+import { file_cleanapi_cleanapi } from "../../../cleanapi/cleanapi_pb";
 import type { Metadata } from "./metadata_type_pb";
 import { file_osac_private_v1_metadata_type } from "./metadata_type_pb";
 import type { StorageProtocol } from "./storage_common_type_pb";
@@ -28,70 +29,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file osac/private/v1/volume_type.proto.
  */
 export const file_osac_private_v1_volume_type: GenFile = /*@__PURE__*/
-  fileDesc("CiFvc2FjL3ByaXZhdGUvdjEvdm9sdW1lX3R5cGUucHJvdG8SD29zYWMucHJpdmF0ZS52MSJACgxQVkNSZWZlcmVuY2USDAoEbmFtZRgBIAEoCRIRCgluYW1lc3BhY2UYAiABKAkSDwoHY2x1c3RlchgDIAEoCSIsCgtQVlJlZmVyZW5jZRIMCgRuYW1lGAEgASgJEg8KB2NsdXN0ZXIYAiABKAkimwEKBlZvbHVtZRIKCgJpZBgBIAEoCRIrCghtZXRhZGF0YRgCIAEoCzIZLm9zYWMucHJpdmF0ZS52MS5NZXRhZGF0YRIpCgRzcGVjGAMgASgLMhsub3NhYy5wcml2YXRlLnYxLlZvbHVtZVNwZWMSLQoGc3RhdHVzGAQgASgLMh0ub3NhYy5wcml2YXRlLnYxLlZvbHVtZVN0YXR1cyK4AQoKVm9sdW1lU3BlYxIdCgxzdG9yYWdlX3RpZXIYASABKAlCB7pIBHICEAESGQoIc2l6ZV9naWIYAiABKANCB7pIBCICIAASQAoLYWNjZXNzX21vZGUYAyABKA4yIS5vc2FjLnByaXZhdGUudjEuVm9sdW1lQWNjZXNzTW9kZUIIukgFggECEAESLgoHcHZjX3JlZhgEIAEoCzIdLm9zYWMucHJpdmF0ZS52MS5QVkNSZWZlcmVuY2UipwIKDFZvbHVtZVN0YXR1cxIrCgVzdGF0ZRgBIAEoDjIcLm9zYWMucHJpdmF0ZS52MS5Wb2x1bWVTdGF0ZRIUCgdtZXNzYWdlGAIgASgJSACIAQESGAoQdmVuZG9yX3ZvbHVtZV9pZBgDIAEoCRIPCgdiYWNrZW5kGAQgASgJEjIKCHByb3RvY29sGAUgASgOMiAub3NhYy5wcml2YXRlLnYxLlN0b3JhZ2VQcm90b2NvbBILCgNodWIYBiABKAkSLgoHcHZjX3JlZhgHIAEoCzIdLm9zYWMucHJpdmF0ZS52MS5QVkNSZWZlcmVuY2USLAoGcHZfcmVmGAggASgLMhwub3NhYy5wcml2YXRlLnYxLlBWUmVmZXJlbmNlQgoKCF9tZXNzYWdlKtkBChBWb2x1bWVBY2Nlc3NNb2RlEiIKHlZPTFVNRV9BQ0NFU1NfTU9ERV9VTlNQRUNJRklFRBAAEiYKIlZPTFVNRV9BQ0NFU1NfTU9ERV9SRUFEX1dSSVRFX09OQ0UQARIlCiFWT0xVTUVfQUNDRVNTX01PREVfUkVBRF9PTkxZX01BTlkQAhImCiJWT0xVTUVfQUNDRVNTX01PREVfUkVBRF9XUklURV9NQU5ZEAMSKgomVk9MVU1FX0FDQ0VTU19NT0RFX1JFQURfV1JJVEVfT05DRV9QT0QQBCqwAQoLVm9sdW1lU3RhdGUSHAoYVk9MVU1FX1NUQVRFX1VOU1BFQ0lGSUVEEAASGQoVVk9MVU1FX1NUQVRFX0NSRUFUSU5HEAESGgoWVk9MVU1FX1NUQVRFX0FWQUlMQUJMRRACEhcKE1ZPTFVNRV9TVEFURV9GQUlMRUQQAxIZChVWT0xVTUVfU1RBVEVfREVMRVRJTkcQBBIYChRWT0xVTUVfU1RBVEVfREVMRVRFRBAFYgZwcm90bzM", [file_buf_validate_validate, file_osac_private_v1_metadata_type, file_osac_private_v1_storage_common_type]);
-
-/**
- * Identifies the PVC that triggered the volume creation.
- *
- * @generated from message osac.private.v1.PVCReference
- */
-export type PVCReference = Message<"osac.private.v1.PVCReference"> & {
-  /**
-   * Name of the PersistentVolumeClaim.
-   *
-   * @generated from field: string name = 1;
-   */
-  name: string;
-
-  /**
-   * Namespace of the PersistentVolumeClaim.
-   *
-   * @generated from field: string namespace = 2;
-   */
-  namespace: string;
-
-  /**
-   * Cluster where the PersistentVolumeClaim exists.
-   *
-   * @generated from field: string cluster = 3;
-   */
-  cluster: string;
-};
-
-/**
- * Describes the message osac.private.v1.PVCReference.
- * Use `create(PVCReferenceSchema)` to create a new message.
- */
-export const PVCReferenceSchema: GenMessage<PVCReference> = /*@__PURE__*/
-  messageDesc(file_osac_private_v1_volume_type, 0);
-
-/**
- * Identifies the PV created for a volume.
- *
- * @generated from message osac.private.v1.PVReference
- */
-export type PVReference = Message<"osac.private.v1.PVReference"> & {
-  /**
-   * Name of the PersistentVolume.
-   *
-   * @generated from field: string name = 1;
-   */
-  name: string;
-
-  /**
-   * Cluster where the PersistentVolume exists.
-   *
-   * @generated from field: string cluster = 2;
-   */
-  cluster: string;
-};
-
-/**
- * Describes the message osac.private.v1.PVReference.
- * Use `create(PVReferenceSchema)` to create a new message.
- */
-export const PVReferenceSchema: GenMessage<PVReference> = /*@__PURE__*/
-  messageDesc(file_osac_private_v1_volume_type, 1);
+  fileDesc("CiFvc2FjL3ByaXZhdGUvdjEvdm9sdW1lX3R5cGUucHJvdG8SD29zYWMucHJpdmF0ZS52MSKbAQoGVm9sdW1lEgoKAmlkGAEgASgJEisKCG1ldGFkYXRhGAIgASgLMhkub3NhYy5wcml2YXRlLnYxLk1ldGFkYXRhEikKBHNwZWMYAyABKAsyGy5vc2FjLnByaXZhdGUudjEuVm9sdW1lU3BlYxItCgZzdGF0dXMYBCABKAsyHS5vc2FjLnByaXZhdGUudjEuVm9sdW1lU3RhdHVzIogBCgpWb2x1bWVTcGVjEh0KDHN0b3JhZ2VfdGllchgBIAEoCUIHukgEcgIQARIZCghzaXplX2dpYhgCIAEoA0IHukgEIgIgABJACgthY2Nlc3NfbW9kZRgDIAEoDjIhLm9zYWMucHJpdmF0ZS52MS5Wb2x1bWVBY2Nlc3NNb2RlQgi6SAWCAQIQASLJAQoMVm9sdW1lU3RhdHVzEisKBXN0YXRlGAEgASgOMhwub3NhYy5wcml2YXRlLnYxLlZvbHVtZVN0YXRlEhQKB21lc3NhZ2UYAiABKAlIAIgBARIYChB2ZW5kb3Jfdm9sdW1lX2lkGAMgASgJEg8KB2JhY2tlbmQYBCABKAkSMgoIcHJvdG9jb2wYBSABKA4yIC5vc2FjLnByaXZhdGUudjEuU3RvcmFnZVByb3RvY29sEgsKA2h1YhgGIAEoCUIKCghfbWVzc2FnZSrZAQoQVm9sdW1lQWNjZXNzTW9kZRIiCh5WT0xVTUVfQUNDRVNTX01PREVfVU5TUEVDSUZJRUQQABImCiJWT0xVTUVfQUNDRVNTX01PREVfUkVBRF9XUklURV9PTkNFEAESJQohVk9MVU1FX0FDQ0VTU19NT0RFX1JFQURfT05MWV9NQU5ZEAISJgoiVk9MVU1FX0FDQ0VTU19NT0RFX1JFQURfV1JJVEVfTUFOWRADEioKJlZPTFVNRV9BQ0NFU1NfTU9ERV9SRUFEX1dSSVRFX09OQ0VfUE9EEAQqsAEKC1ZvbHVtZVN0YXRlEhwKGFZPTFVNRV9TVEFURV9VTlNQRUNJRklFRBAAEhkKFVZPTFVNRV9TVEFURV9DUkVBVElORxABEhoKFlZPTFVNRV9TVEFURV9BVkFJTEFCTEUQAhIXChNWT0xVTUVfU1RBVEVfRkFJTEVEEAMSGQoVVk9MVU1FX1NUQVRFX0RFTEVUSU5HEAQSGAoUVk9MVU1FX1NUQVRFX0RFTEVURUQQBUIGirUYAggBYgZwcm90bzM", [file_buf_validate_validate, file_cleanapi_cleanapi, file_osac_private_v1_metadata_type, file_osac_private_v1_storage_common_type]);
 
 /**
  * Represents a block storage volume managed by the OSAC storage control plane.
@@ -143,7 +81,7 @@ export type Volume = Message<"osac.private.v1.Volume"> & {
  * Use `create(VolumeSchema)` to create a new message.
  */
 export const VolumeSchema: GenMessage<Volume> = /*@__PURE__*/
-  messageDesc(file_osac_private_v1_volume_type, 2);
+  messageDesc(file_osac_private_v1_volume_type, 0);
 
 /**
  * Defines the desired configuration for a Volume. All fields are immutable after creation.
@@ -171,14 +109,6 @@ export type VolumeSpec = Message<"osac.private.v1.VolumeSpec"> & {
    * @generated from field: osac.private.v1.VolumeAccessMode access_mode = 3;
    */
   accessMode: VolumeAccessMode;
-
-  /**
-   * Reference to the PVC that triggered this volume creation. Set by the CSI driver.
-   * Empty for API-driven volume creation.
-   *
-   * @generated from field: osac.private.v1.PVCReference pvc_ref = 4;
-   */
-  pvcRef?: PVCReference | undefined;
 };
 
 /**
@@ -186,7 +116,7 @@ export type VolumeSpec = Message<"osac.private.v1.VolumeSpec"> & {
  * Use `create(VolumeSpecSchema)` to create a new message.
  */
 export const VolumeSpecSchema: GenMessage<VolumeSpec> = /*@__PURE__*/
-  messageDesc(file_osac_private_v1_volume_type, 3);
+  messageDesc(file_osac_private_v1_volume_type, 1);
 
 /**
  * Represents the current operational state of a Volume.
@@ -239,20 +169,6 @@ export type VolumeStatus = Message<"osac.private.v1.VolumeStatus"> & {
    * @generated from field: string hub = 6;
    */
   hub: string;
-
-  /**
-   * Operator-confirmed reference to the PVC on the tenant cluster.
-   *
-   * @generated from field: osac.private.v1.PVCReference pvc_ref = 7;
-   */
-  pvcRef?: PVCReference | undefined;
-
-  /**
-   * Reference to the PV created for this volume on the tenant cluster.
-   *
-   * @generated from field: osac.private.v1.PVReference pv_ref = 8;
-   */
-  pvRef?: PVReference | undefined;
 };
 
 /**
@@ -260,7 +176,7 @@ export type VolumeStatus = Message<"osac.private.v1.VolumeStatus"> & {
  * Use `create(VolumeStatusSchema)` to create a new message.
  */
 export const VolumeStatusSchema: GenMessage<VolumeStatus> = /*@__PURE__*/
-  messageDesc(file_osac_private_v1_volume_type, 4);
+  messageDesc(file_osac_private_v1_volume_type, 2);
 
 /**
  * Access modes for Volume resources, matching Kubernetes PersistentVolume access modes.
