@@ -1,4 +1,4 @@
-import { type MouseEvent, type Ref, useEffect, useMemo, useState } from 'react';
+import { type MouseEvent, type ReactNode, type Ref, useEffect, useMemo, useState } from 'react';
 import {
   FormGroup,
   MenuToggle,
@@ -17,6 +17,7 @@ export interface SelectFieldOption {
   value: string | number;
   label: string;
   isDisabled?: boolean;
+  description?: ReactNode;
 }
 
 interface SelectFieldProps {
@@ -106,7 +107,12 @@ export const SelectField = ({
       >
         <SelectList>
           {options.map((option) => (
-            <SelectOption key={option.value} value={option.value} isDisabled={option.isDisabled}>
+            <SelectOption
+              key={option.value}
+              value={option.value}
+              isDisabled={option.isDisabled}
+              description={option.description}
+            >
               {option.label}
             </SelectOption>
           ))}
