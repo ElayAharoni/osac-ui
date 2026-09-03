@@ -14,6 +14,7 @@ import type { ComputeInstance } from '@osac/types';
 import { useVmDetailsDisplay } from './useVmDetailsDisplay';
 import VmDetailsCatalogValue from './VmDetailsCatalogValue';
 import { useDiskImage } from '../../../api/v1/disk-image';
+import { resourceDisplayName } from '../../../api/v1/networking';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { displayValue } from '../../../utils/detailFormatters';
 import { formatBootDiskSizeForReview } from '../../catalogProvision/wizard/catalogOverlay';
@@ -83,7 +84,7 @@ const VmDetailsCard = ({ vm }: Props) => {
                   {isDiskImageLoading && diskImageId ? (
                     <Skeleton width="150px" />
                   ) : (
-                    displayValue(diskImage?.metadata?.name)
+                    displayValue(resourceDisplayName(diskImage?.metadata, diskImageId))
                   )}
                 </DescriptionListDescription>
               </DescriptionListGroup>

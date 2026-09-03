@@ -34,8 +34,10 @@ export const VM_SSH_KEY_WIRE_PATH = 'ssh_public_key';
 export const VM_SSH_KEY_FORM_PATH = 'spec.sshPublicKey';
 export const vmSshPublicKeyWirePath = VM_SSH_KEY_WIRE_PATH;
 
+export const VM_DISK_IMAGE_WIRE_PATH = 'spec.disk_image';
+
 export const CONFIGURATION_CATALOG_PATHS = [
-  'spec.disk_image',
+  VM_DISK_IMAGE_WIRE_PATH,
   'spec.user_data',
   'spec.boot_disk.size_gib',
   'spec.boot_disk.storage_tier',

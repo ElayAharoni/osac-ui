@@ -4,6 +4,7 @@ import type { TFunction } from 'i18next';
 import type { ComputeInstanceCatalogItem } from '@osac/types';
 
 import type { ComputeInstanceDiskValues, ComputeInstanceWizardValues } from './fields';
+import { VM_DISK_IMAGE_WIRE_PATH } from './fields';
 import { fieldDefinitionDefaultToInputString } from '../../../catalogFieldDefinition';
 import {
   getCatalogFieldOverlay,
@@ -45,7 +46,7 @@ export const applyVmCatalogConfigurationDefaults = (
   const definitions = readCatalogFieldDefinitions(catalogItem);
 
   const diskImageOverlay = getCatalogFieldOverlay(
-    'spec.disk_image',
+    VM_DISK_IMAGE_WIRE_PATH,
     definitions,
     t('catalogProvision.vm.fields.diskImage'),
   );

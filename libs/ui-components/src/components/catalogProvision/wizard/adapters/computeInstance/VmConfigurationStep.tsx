@@ -22,6 +22,7 @@ import {
   readCatalogFieldDefinitions,
 } from '../../catalogOverlay';
 import UserDataField from '../../fields/UserDataField';
+import { VM_DISK_IMAGE_WIRE_PATH } from './fields';
 
 const ARCH_LABELS: Record<Architecture, string> = {
   [Architecture.UNSPECIFIED]: '',
@@ -105,7 +106,7 @@ export const VmConfigurationStep = ({ catalogItem }: Props) => {
   const overlays = useMemo(
     () => ({
       diskImage: getCatalogFieldOverlay(
-        'spec.disk_image',
+        VM_DISK_IMAGE_WIRE_PATH,
         definitions,
         t('catalogProvision.vm.fields.diskImage'),
       ),

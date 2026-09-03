@@ -18,6 +18,7 @@ import {
   readCatalogFieldDefinitions,
   resolveStorageTierDisplayName,
 } from '../../catalogProvision/wizard/catalogOverlay';
+import { VM_DISK_IMAGE_WIRE_PATH } from '../../catalogProvision/wizard/adapters/computeInstance/fields';
 
 export type VmNetworkingRow = {
   virtualNetwork: string;
@@ -46,7 +47,7 @@ export const useVmDetailsDisplay = (vm: ComputeInstance) => {
   const fieldLabels = useMemo(() => {
     const definitions = catalogItem ? readCatalogFieldDefinitions(catalogItem) : [];
     const imageOverlay = getCatalogFieldOverlay(
-      'spec.disk_image',
+      VM_DISK_IMAGE_WIRE_PATH,
       definitions,
       t('catalogProvision.vm.fields.diskImage'),
     );

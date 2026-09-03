@@ -11,13 +11,14 @@ import {
   readCatalogFieldDefinitions,
 } from '../../catalogOverlay';
 import { isValidSshPublicKey } from '../../fields/credentialValidation';
+import { VM_DISK_IMAGE_WIRE_PATH } from './fields';
 import type { WizardStepId } from '../../stepIds';
 
 const buildComputeInstanceFieldDefinitions = (catalogItem: unknown, t: TFunction) => {
   const definitions = readCatalogFieldDefinitions(catalogItem);
 
   const diskImageOverlay = getCatalogFieldOverlay(
-    'spec.disk_image',
+    VM_DISK_IMAGE_WIRE_PATH,
     definitions,
     t('catalogProvision.vm.fields.diskImage'),
   );
