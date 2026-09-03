@@ -15,6 +15,7 @@ import { useFormikContext } from 'formik';
 import { type SecurityGroup } from '@osac/types';
 import { cel } from '@osac/ui-components/api/cel';
 import { useInstanceType } from '@osac/ui-components/api/v1/instance-types';
+import { useDiskImage } from '@osac/ui-components/api/v1/disk-image';
 import {
   useSecurityGroups,
   useSubnet,
@@ -28,6 +29,7 @@ import {
   getProjectName,
 } from '@osac/ui-components/components/Project/utils';
 import { formatInstanceTypeReviewLabelFromType } from '@osac/ui-components/components/vm/utils';
+import { resourceDisplayName } from '@osac/ui-components/api/v1/networking';
 import { getErrorMessage } from '@osac/ui-components/utils/error';
 
 import { ComputeInstanceWizardValues } from './fields';
@@ -51,6 +53,12 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
     isLoading: instanceLoading,
     error: instanceErr,
   } = useInstanceType(values.spec.instanceType);
+
+  const {
+    data: diskImage,
+    isLoading: diskImageLoading,
+    error: diskImageErr,
+  } = useDiskImage(values.spec.diskImage || undefined);
 
   const {
     data: virtualNetwork,
@@ -84,6 +92,7 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
 
   if (
     instanceLoading ||
+    diskImageLoading ||
     virtNetLoading ||
     subnetLoading ||
     scLoading ||
@@ -103,6 +112,13 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
         <StackItem>
           <Alert variant="warning" isInline title={t('Failed to fetch instance type')}>
             {getErrorMessage(instanceErr)}
+          </Alert>
+        </StackItem>
+      )}
+      {!!diskImageErr && (
+        <StackItem>
+          <Alert variant="warning" isInline title={t('Failed to fetch disk image')}>
+            {getErrorMessage(diskImageErr)}
           </Alert>
         </StackItem>
       )}
@@ -173,9 +189,9 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <DescriptionListTerm>{t('VM image')}</DescriptionListTerm>
+            <DescriptionListTerm>{t('Disk image')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {formatReviewScalar(values.spec.image.sourceRef)}
+              {resourceDisplayName(diskImage?.metadata, values.spec.diskImage)}
             </DescriptionListDescription>
           </DescriptionListGroup>
 
