@@ -7,11 +7,11 @@ import { Architecture, DiskImageLifecycle } from '@osac/types';
 import { resourceDisplayName } from '@osac/ui-components/api/v1/networking';
 import { formatInstanceTypeOptionLabel } from '@osac/ui-components/components/vm/utils';
 
+import { useDiskImages } from '../../../../../api/v1/disk-image';
 import {
   INSTANCE_TYPE_ACTIVE_LIST_FILTER,
   useInstanceTypes,
 } from '../../../../../api/v1/instance-types';
-import { useDiskImages } from '../../../../../api/v1/disk-image';
 import { useTranslation } from '../../../../../hooks/useTranslation';
 import OsacForm from '../../../../Form/OsacForm';
 import { SelectField } from '../../../../Form/SelectField';

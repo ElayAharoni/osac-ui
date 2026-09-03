@@ -34,13 +34,13 @@ const vmCatalogItem: ComputeInstanceCatalogItem = {
   fieldDefinitions: [
     {
       $typeName: 'osac.public.v1.FieldDefinition',
-      path: 'spec.image.source_ref',
-      displayName: 'VM image',
+      path: 'spec.disk_image',
+      displayName: 'Disk image',
       editable: true,
       validationSchema: '',
       default: {
         $typeName: 'google.protobuf.Value',
-        kind: { case: 'stringValue', value: 'quay.io/example/rhel9' },
+        kind: { case: 'stringValue', value: 'di-rhel9' },
       },
     },
   ],
@@ -51,7 +51,7 @@ const emptyValues: ComputeInstanceWizardValues = {
   metadata: { name: '', project: '' },
   spec: {
     sshPublicKey: '',
-    image: { sourceRef: '' },
+    diskImage: '',
     instanceType: '',
     userData: '',
     bootDisk: { sizeGib: '', storageTier: '' },
@@ -165,7 +165,7 @@ describe('buildComputeInstanceStepSchema', () => {
         metadata: { name: 'web-01', project: '' },
         spec: {
           ...emptyValues.spec,
-          image: { sourceRef: 'quay.io/example/rhel9' },
+          diskImage: 'di-rhel9',
           instanceType: 'standard-4-8',
           bootDisk: { sizeGib: 'not-a-number', storageTier: '' },
         },
@@ -201,7 +201,7 @@ describe('buildComputeInstanceStepSchema', () => {
         metadata: { name: 'web-01', project: '' },
         spec: {
           ...emptyValues.spec,
-          image: { sourceRef: 'quay.io/example/rhel9' },
+          diskImage: 'di-rhel9',
         },
       },
       vmCatalogItem,
@@ -226,7 +226,7 @@ describe('buildComputeInstanceStepSchema', () => {
         metadata: { name: 'web-01', project: '' },
         spec: {
           ...emptyValues.spec,
-          image: { sourceRef: 'quay.io/example/rhel9' },
+          diskImage: 'di-rhel9',
         },
       },
       vmCatalogItem,
@@ -236,6 +236,45 @@ describe('buildComputeInstanceStepSchema', () => {
         instanceType: 'catalogProvision.validation.instanceTypeRequired',
       },
     });
+  });
+
+  it('requires disk image on configuration step', async () => {
+    const errors = await validateStep(
+      'configuration',
+      {
+        ...emptyValues,
+        catalogItemId: vmCatalogItem.id,
+        metadata: { name: 'web-01', project: '' },
+        spec: {
+          ...emptyValues.spec,
+          instanceType: 'standard-4-8',
+        },
+      },
+      vmCatalogItem,
+    );
+    expect(errors).toEqual({
+      spec: {
+        diskImage: 'catalogProvision.validation.diskImageRequired',
+      },
+    });
+  });
+
+  it('accepts valid disk image and instance type on configuration step', async () => {
+    const errors = await validateStep(
+      'configuration',
+      {
+        ...emptyValues,
+        catalogItemId: vmCatalogItem.id,
+        metadata: { name: 'web-01', project: '' },
+        spec: {
+          ...emptyValues.spec,
+          diskImage: 'di-rhel9',
+          instanceType: 'standard-4-8',
+        },
+      },
+      vmCatalogItem,
+    );
+    expect(errors).toEqual({});
   });
 
   it('requires boot disk on storage step', async () => {
@@ -344,7 +383,7 @@ describe('buildComputeInstanceStepSchema', () => {
         metadata: { name: 'web-01', project: '' },
         spec: {
           ...emptyValues.spec,
-          image: { sourceRef: 'quay.io/example/rhel9' },
+          diskImage: 'di-rhel9',
           instanceType: 'standard-4-8',
           additionalDisks: [{ sizeGib: '100', storageTier: '' }],
         },

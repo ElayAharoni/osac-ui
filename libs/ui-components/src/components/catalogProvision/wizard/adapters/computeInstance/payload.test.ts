@@ -53,7 +53,7 @@ const buildValues = (project: string) => ({
   spec: {
     ...createEmptyComputeInstanceValues().spec,
     instanceType: 'standard-4-8',
-    image: { sourceRef: 'quay.io/example/rhel9' },
+    diskImage: 'di-rhel9',
     networking: {
       virtualNetwork: 'vnet-1',
       subnet: 'subnet-1',
@@ -69,9 +69,9 @@ const baseValues = () => {
     catalogItemId: vmCatalogItem.id,
     metadata: { name: 'web-01', project: '' },
     spec: {
-      ...values.spec,
-      image: { sourceRef: 'quay.io/example/rhel9' },
-      instanceType: 'standard-4-8',
+    ...values.spec,
+    diskImage: 'di-rhel9',
+    instanceType: 'standard-4-8',
       networking: { virtualNetwork: 'vnet', subnet: 'subnet-1', securityGroups: ['sg-1'] },
     },
   };
@@ -84,7 +84,7 @@ describe('buildComputeInstanceCreatePayload', () => {
       spec: {
         catalogItem: { id: vmCatalogItem.id },
         instanceType: { id: 'standard-4-8' },
-        image: { sourceType: 'registry', sourceRef: 'quay.io/example/rhel9' },
+        diskImage: { id: 'di-rhel9' },
         runStrategy: 'Always',
         networkAttachments: [
           {

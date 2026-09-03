@@ -5,10 +5,12 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { UserEvent } from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ClusterCatalogItem, ComputeInstanceCatalogItem } from '@osac/types';
+import type { ClusterCatalogItem, ComputeInstanceCatalogItem, DiskImage } from '@osac/types';
 import {
+  Architecture,
   ClusterTemplateReferenceSchema,
   ComputeInstanceTemplateReferenceSchema,
+  DiskImageLifecycle,
   HostTypeReferenceSchema,
   InstanceTypeState,
   SecurityGroupState,
@@ -111,12 +113,14 @@ const advanceToConfigurationStep = async (
   await fillGeneralStep(user, vmName);
   await clickWizardNext(user);
   await waitFor(() => {
-    expect(screen.getByLabelText(/VM image/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Disk image/)).toBeInTheDocument();
   });
 };
 
 const waitForConfigurationReady = async () => {
   await waitFor(() => {
+    expect(screen.getByLabelText(/^Disk image/)).not.toBeDisabled();
+    expect(screen.getByLabelText(/^Disk image/)).toHaveTextContent('rhel9');
     expect(screen.getByLabelText(/^Instance type/)).not.toBeDisabled();
     expect(screen.getByLabelText(/^Instance type/)).toHaveTextContent('standard-4-8');
   });
@@ -241,13 +245,13 @@ const vmCatalogItem: ComputeInstanceCatalogItem = {
   fieldDefinitions: [
     {
       $typeName: 'osac.public.v1.FieldDefinition',
-      path: 'spec.image.source_ref',
-      displayName: 'VM image',
+      path: 'spec.disk_image',
+      displayName: 'Disk image',
       editable: true,
       validationSchema: '',
       default: {
         $typeName: 'google.protobuf.Value',
-        kind: { case: 'stringValue', value: 'quay.io/example/rhel9' },
+        kind: { case: 'stringValue', value: 'di-rhel9' },
       },
     },
   ],
@@ -292,13 +296,13 @@ const catalogItemWithDistinctDefaults: ComputeInstanceCatalogItem = {
   fieldDefinitions: [
     {
       $typeName: 'osac.public.v1.FieldDefinition',
-      path: 'spec.image.source_ref',
-      displayName: 'VM image',
+      path: 'spec.disk_image',
+      displayName: 'Disk image',
       editable: true,
       validationSchema: '',
       default: {
         $typeName: 'google.protobuf.Value',
-        kind: { case: 'stringValue', value: 'quay.io/example/rhel9' },
+        kind: { case: 'stringValue', value: 'di-rhel9' },
       },
     },
   ],
@@ -326,13 +330,13 @@ const multiFieldCatalogItem: ComputeInstanceCatalogItem = {
   fieldDefinitions: [
     {
       $typeName: 'osac.public.v1.FieldDefinition',
-      path: 'spec.image.source_ref',
-      displayName: 'VM image',
+      path: 'spec.disk_image',
+      displayName: 'Disk image',
       editable: true,
       validationSchema: '',
       default: {
         $typeName: 'google.protobuf.Value',
-        kind: { case: 'stringValue', value: 'quay.io/example/rhel9' },
+        kind: { case: 'stringValue', value: 'di-rhel9' },
       },
     },
     {
@@ -518,6 +522,31 @@ const apiFixtures: MockApiFixtures = {
       },
     },
   ],
+  diskImages: [
+    {
+      $typeName: 'osac.public.v1.DiskImage',
+      id: 'di-rhel9',
+      metadata: {
+        $typeName: 'osac.public.v1.Metadata',
+        displayName: '',
+        description: '',
+        name: 'rhel9',
+        annotations: {},
+        creator: 'foo',
+        labels: {},
+        project: 'foo',
+        tenant: 'foo',
+        version: 1,
+      },
+      spec: {
+        $typeName: 'osac.public.v1.DiskImageSpec',
+        lifecycle: DiskImageLifecycle.AVAILABLE,
+        architecture: [Architecture.AMD64],
+        guestOsFamily: 0,
+        sourceRef: '',
+      },
+    },
+  ] as unknown as DiskImage[],
 };
 
 type RenderWizardOptions = {
@@ -553,7 +582,7 @@ const renderWizard = (options: RenderWizardOptions = {}) => {
 
 const expectConfigurationDefaults = async () => {
   await waitFor(() => {
-    expect(screen.getByLabelText(/VM image/)).toHaveValue('quay.io/example/rhel9');
+    expect(screen.getByLabelText(/^Disk image/)).toHaveTextContent('rhel9');
   });
 };
 
@@ -631,7 +660,7 @@ describe('CatalogProvisionWizard', () => {
 
     expect(onProvision.mock.calls[0][0]).toMatchObject({
       spec: {
-        image: { sourceRef: 'quay.io/example/rhel9' },
+        diskImage: { id: 'di-rhel9' },
         runStrategy: 'Always',
         instanceType: { id: 'standard-4-8' },
         bootDisk: { sizeGib: 40 },
@@ -672,7 +701,7 @@ describe('CatalogProvisionWizard', () => {
 
     releaseCatalogFetch();
     await waitFor(() => {
-      expect(screen.getByLabelText(/VM image/)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Disk image/)).toBeInTheDocument();
     });
 
     await expectConfigurationDefaults();
@@ -699,7 +728,7 @@ describe('CatalogProvisionWizard', () => {
     expect(nameInput).toHaveAttribute('aria-describedby', 'metadata-name-helper-error');
 
     expect(screen.getByLabelText(/^Name/)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/VM image/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Disk image/)).not.toBeInTheDocument();
   });
 
   it('closes immediately on Cancel when the wizard is pristine', async () => {
@@ -779,7 +808,7 @@ describe('CatalogProvisionWizard', () => {
     await clickWizardBack(user);
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/VM image/)).toHaveValue('quay.io/example/rhel9');
+      expect(screen.getByLabelText(/^Disk image/)).toHaveTextContent('rhel9');
     });
   });
 
@@ -1015,7 +1044,7 @@ describe('CatalogProvisionWizard', () => {
     expect(onProvision.mock.calls[0][0]).toMatchObject({
       metadata: { name: 'web-01' },
       spec: {
-        image: { sourceRef: 'quay.io/example/rhel9' },
+        diskImage: { id: 'di-rhel9' },
         instanceType: { id: 'standard-4-8' },
       },
     });
@@ -1055,7 +1084,7 @@ describe('CatalogProvisionWizard', () => {
     const { user } = renderWizard();
 
     await advanceToConfigurationStep(user, 'web-01', vmCatalogItem.title);
-    expect(screen.getByLabelText(/VM image/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Disk image/)).toBeInTheDocument();
     expect(screen.queryByLabelText(/Boot disk/)).not.toBeInTheDocument();
 
     await waitForConfigurationReady();
@@ -1065,7 +1094,7 @@ describe('CatalogProvisionWizard', () => {
       expect(screen.getByLabelText(/Boot disk/)).toBeInTheDocument();
     });
     expect(screen.getByText('Storage tier')).toBeInTheDocument();
-    expect(screen.queryByLabelText(/VM image/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Disk image/)).not.toBeInTheDocument();
   });
 
   it('blocks Next on the Storage step until the boot disk size is valid', async () => {

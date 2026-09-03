@@ -14,9 +14,10 @@ import { useFormikContext } from 'formik';
 
 import { type SecurityGroup } from '@osac/types';
 import { cel } from '@osac/ui-components/api/cel';
-import { useInstanceType } from '@osac/ui-components/api/v1/instance-types';
 import { useDiskImage } from '@osac/ui-components/api/v1/disk-image';
+import { useInstanceType } from '@osac/ui-components/api/v1/instance-types';
 import {
+  resourceDisplayName,
   useSecurityGroups,
   useSubnet,
   useVirtualNetwork,
@@ -29,7 +30,6 @@ import {
   getProjectName,
 } from '@osac/ui-components/components/Project/utils';
 import { formatInstanceTypeReviewLabelFromType } from '@osac/ui-components/components/vm/utils';
-import { resourceDisplayName } from '@osac/ui-components/api/v1/networking';
 import { getErrorMessage } from '@osac/ui-components/utils/error';
 
 import { ComputeInstanceWizardValues } from './fields';
