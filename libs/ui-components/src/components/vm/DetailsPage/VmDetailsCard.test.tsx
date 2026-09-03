@@ -96,7 +96,7 @@ const renderCard = (vm: ComputeInstance = catalogVm) =>
   });
 
 describe('VmDetailsCard', () => {
-  it('shows catalog fields with full SSH key', () => {
+  it('shows catalog fields with full SSH key', async () => {
     vi.mocked(useVmDetailsDisplay).mockReturnValue({
       catalogItemId: 'catalog-rhel-9',
       hasCatalogItem: true,
@@ -151,6 +151,8 @@ describe('VmDetailsCard', () => {
     expect(screen.queryByText('Version')).not.toBeInTheDocument();
     expect(screen.queryByText('Creators')).not.toBeInTheDocument();
     expect(screen.getByText('Creator')).toBeInTheDocument();
+    // disk image name resolves via useDiskImage lookup
+    await screen.findByText('RHEL 9');
   });
 
   it('shows degraded message when catalog item is missing', () => {

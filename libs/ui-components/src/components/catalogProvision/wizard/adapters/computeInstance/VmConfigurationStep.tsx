@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Alert, Button, EmptyState, EmptyStateBody, Stack, StackItem } from '@patternfly/react-core';
-import { useField } from 'formik';
+import { useField, useFormikContext } from 'formik';
 
 import type { ComputeInstanceCatalogItem } from '@osac/types';
 import { Architecture, DiskImageLifecycle } from '@osac/types';
@@ -51,6 +52,7 @@ export const VmConfigurationStep = ({ catalogItem }: Props) => {
   } = useDiskImages();
 
   const [diskImageField] = useField<string>('spec.diskImage');
+  const { setFieldValue } = useFormikContext();
 
   const selectedDiskImage = useMemo(
     () => diskImages.find((di) => di.id === diskImageField.value),
@@ -90,6 +92,15 @@ export const VmConfigurationStep = ({ catalogItem }: Props) => {
   );
 
   const definitions = useMemo(() => readCatalogFieldDefinitions(catalogItem), [catalogItem]);
+
+  // If disk images finish loading and the current value isn't in the visible options
+  // (e.g. a catalog default pointed to an OBSOLETE image), clear the selection so
+  // the user sees the placeholder and must pick a valid image.
+  useEffect(() => {
+    if (!diskImagesLoading && diskImageField.value && !diskImages.find((di) => di.id === diskImageField.value)) {
+      void setFieldValue('spec.diskImage', '');
+    }
+  }, [diskImagesLoading, diskImages, diskImageField.value, setFieldValue]);
 
   const overlays = useMemo(
     () => ({
@@ -138,8 +149,8 @@ export const VmConfigurationStep = ({ catalogItem }: Props) => {
             <EmptyStateBody>{t('catalogProvision.diskImages.emptyStateBody')}</EmptyStateBody>
             <Button
               variant="link"
-              component="a"
-              href="/admin/infrastructure/disk-images/create"
+              component={Link}
+              to="/admin/infrastructure/disk-images/create"
             >
               {t('catalogProvision.diskImages.createCTA')}
             </Button>
