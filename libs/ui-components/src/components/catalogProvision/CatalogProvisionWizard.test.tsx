@@ -9,6 +9,7 @@ import type { ClusterCatalogItem, ComputeInstanceCatalogItem, DiskImage } from '
 import {
   Architecture,
   ClusterTemplateReferenceSchema,
+  ComputeInstanceRunStrategy,
   ComputeInstanceTemplateReferenceSchema,
   DiskImageLifecycle,
   HostTypeReferenceSchema,
@@ -661,7 +662,7 @@ describe('CatalogProvisionWizard', () => {
     expect(onProvision.mock.calls[0][0]).toMatchObject({
       spec: {
         diskImage: { id: 'di-rhel9' },
-        runStrategy: 'Always',
+        runStrategy: ComputeInstanceRunStrategy.COMPUTE_INSTANCE_RUN_STRATEGY_ALWAYS,
         instanceType: { id: 'standard-4-8' },
         bootDisk: { sizeGib: 40 },
       },
