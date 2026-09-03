@@ -13,6 +13,7 @@ import type { ComputeInstance } from '@osac/types';
 
 import { useVmDetailsDisplay } from './useVmDetailsDisplay';
 import VmDetailsCatalogValue from './VmDetailsCatalogValue';
+import { useDiskImage } from '../../../api/v1/disk-image';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { displayValue } from '../../../utils/detailFormatters';
 import { formatBootDiskSizeForReview } from '../../catalogProvision/wizard/catalogOverlay';
@@ -37,6 +38,8 @@ const VmDetailsCard = ({ vm }: Props) => {
     bootDiskTierDisplay,
     additionalDiskRows,
   } = useVmDetailsDisplay(vm);
+  const diskImageId = vm.spec?.diskImage?.id;
+  const { data: diskImage, isLoading: isDiskImageLoading } = useDiskImage(diskImageId);
 
   return (
     <Card isFullHeight>
@@ -77,7 +80,11 @@ const VmDetailsCard = ({ vm }: Props) => {
               <DescriptionListGroup>
                 <DescriptionListTerm>{fieldLabels.image}</DescriptionListTerm>
                 <DescriptionListDescription>
-                  {displayValue(vm.spec?.image?.sourceRef)}
+                  {isDiskImageLoading && diskImageId ? (
+                    <Skeleton width="150px" />
+                  ) : (
+                    displayValue(diskImage?.metadata?.name)
+                  )}
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>

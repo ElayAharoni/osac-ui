@@ -116,7 +116,6 @@
   "catalogProvision.vm.fields.bootDisk": "Boot disk",
   "catalogProvision.vm.fields.diskImage": "Disk image",
   "catalogProvision.vm.fields.diskImageDeprecatedSuffix": "(deprecated)",
-  "catalogProvision.vm.fields.image": "VM image",
   "catalogProvision.vm.fields.instanceType": "Instance type",
   "catalogProvision.vm.fields.name": "Name",
   "catalogProvision.vm.fields.securityGroup": "Security groups",
