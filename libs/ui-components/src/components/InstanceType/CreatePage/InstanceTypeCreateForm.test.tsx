@@ -149,6 +149,35 @@ describe('InstanceTypeCreateForm', () => {
     });
   });
 
+  it.each(['CPU cores', 'Memory (GiB)', 'GPU count'])(
+    'shows non-numeric validation for %s when the field is touched',
+    async (fieldLabel) => {
+      const { user } = renderForm();
+
+      await user.type(screen.getByRole('textbox', { name: fieldLabel }), 'test');
+      await user.tab();
+
+      expect(await screen.findByText('Must be a whole number')).toBeInTheDocument();
+    },
+  );
+
+  it.each([
+    ['GPU count', 'PCI device selector', '10DE:20B0'],
+    ['Resource name', 'PCI device selector', '10DE:20B0'],
+    ['PCI device selector', 'Resource name', 'nvidia.com/A100'],
+  ])(
+    'shows required validation for touched blank GPU field %s',
+    async (touchedField, configuredField, configuredValue) => {
+      const { user } = renderForm();
+
+      await user.type(screen.getByRole('textbox', { name: configuredField }), configuredValue);
+      await user.click(screen.getByRole('textbox', { name: touchedField }));
+      await user.tab();
+
+      expect(await screen.findByText('Required when configuring a GPU')).toBeInTheDocument();
+    },
+  );
+
   it('navigates back to the instance type list on cancel', async () => {
     const { user } = renderForm();
 
