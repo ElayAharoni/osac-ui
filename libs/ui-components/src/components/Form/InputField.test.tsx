@@ -47,6 +47,15 @@ describe('InputField', () => {
     expect(input).not.toHaveAttribute('step');
   });
 
+  it('forwards inputMode to the input', () => {
+    renderInput({ inputMode: 'numeric' });
+
+    expect(screen.getByRole('spinbutton', { name: 'Size (GiB)' })).toHaveAttribute(
+      'inputmode',
+      'numeric',
+    );
+  });
+
   it('trims free-text values on blur', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();

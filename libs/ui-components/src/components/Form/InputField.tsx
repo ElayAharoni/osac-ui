@@ -18,6 +18,7 @@ interface InputFieldProps {
   helperText?: string;
   placeholder?: string;
   onBlur?: () => void;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
   min?: number;
   max?: number;
   step?: number;
@@ -36,6 +37,7 @@ export const InputField = ({
   helperText,
   placeholder,
   onBlur,
+  inputMode,
   min,
   max,
   step,
@@ -85,6 +87,7 @@ export const InputField = ({
               id={fieldId}
               name={name}
               type={type}
+              inputMode={inputMode}
               value={field.value ?? ''}
               placeholder={placeholder}
               min={min}
